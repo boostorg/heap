@@ -7,7 +7,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/concept_archetype.hpp>
 
-#include "../../../boost/heap/heap_concepts.hpp"
+#include <boost/heap/heap_concepts.hpp>
 
 
 typedef boost::default_constructible_archetype<
@@ -18,7 +18,7 @@ typedef boost::default_constructible_archetype<
 
 
 typedef std::vector<int> test_data;
-const int test_size = 128;
+const int test_size = 64;//128;
 
 struct dummy_run
 {
@@ -65,7 +65,7 @@ template <typename pri_queue, typename data_container>
 void fill_emplace_q(pri_queue & q, data_container const & data)
 {
     for (unsigned int i = 0; i != data.size(); ++i) {
-        auto value = data[i];
+        typename pri_queue::value_type value = data[i];
         q.emplace(std::move(value));
     }
 }
@@ -237,7 +237,7 @@ void pri_queue_test_iterators(void)
         BOOST_REQUIRE(data == data_from_queue);
 
         for (unsigned long i = 0; i != data.size(); ++i) {
-            BOOST_REQUIRE_EQUAL(std::distance(q.begin(), q.end()), data.size() - i);
+            BOOST_REQUIRE_EQUAL((long)std::distance(q.begin(), q.end()), (long)(data.size() - i));
             q.pop();
         }
     }
@@ -265,7 +265,7 @@ void pri_queue_test_ordered_iterators(void)
             BOOST_REQUIRE(std::find(q.ordered_begin(), q.ordered_end(), data[i] + data.size()) == q.ordered_end());
 
         for (unsigned long i = 0; i != data.size(); ++i) {
-            BOOST_REQUIRE_EQUAL(std::distance(q.begin(), q.end()), data.size() - i);
+            BOOST_REQUIRE_EQUAL((long)std::distance(q.begin(), q.end()), (long)(data.size() - i));
             q.pop();
         }
     }
