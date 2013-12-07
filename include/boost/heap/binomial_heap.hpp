@@ -131,6 +131,7 @@ class binomial_heap:
 
     typedef typename super_t::internal_type internal_type;
     typedef typename super_t::size_holder_type size_holder;
+    typedef typename super_t::stability_counter_type stability_counter_type;
     typedef typename base_maker::allocator_argument allocator_argument;
 
     template <typename Heap1, typename Heap2>
@@ -399,11 +400,15 @@ public:
 
         if (element->child_count()) {
             size_type sz = (1 << element->child_count()) - 1;
+
             binomial_heap children(value_comp(), element->children, sz);
-            if (trees.empty())
+            if (trees.empty()) {
+                stability_counter_type stability_count = super_t::get_stability_count();
                 swap(children);
-            else
+                super_t::set_stability_count(stability_count);
+            } else
                 merge_and_clear_nodes(children);
+
         }
 
         if (trees.empty())
