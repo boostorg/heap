@@ -68,28 +68,28 @@ struct make_fibonacci_heap_base
             base_type(arg)
         {}
 
+        type(type const & rhs):
+            base_type(static_cast<base_type const &>(rhs)),
+            allocator_type(static_cast<allocator_type const &>(rhs))
+        {}
+
+        type & operator=(type const & rhs)
+        {
+            base_type::operator=(static_cast<base_type const &>(rhs));
+            allocator_type::operator=(static_cast<allocator_type const &>(rhs));
+            return *this;
+        }
+
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         type(type && rhs):
             base_type(std::move(static_cast<base_type&>(rhs))),
             allocator_type(std::move(static_cast<allocator_type&>(rhs)))
         {}
 
-        type(type & rhs):
-            base_type(static_cast<base_type&>(rhs)),
-            allocator_type(static_cast<allocator_type&>(rhs))
-        {}
-
         type & operator=(type && rhs)
         {
             base_type::operator=(std::move(static_cast<base_type&>(rhs)));
             allocator_type::operator=(std::move(static_cast<allocator_type&>(rhs)));
-            return *this;
-        }
-
-        type & operator=(type const & rhs)
-        {
-            base_type::operator=(static_cast<base_type const &>(rhs));
-            allocator_type::operator=(static_cast<allocator_type const &>(rhs));
             return *this;
         }
 #endif
