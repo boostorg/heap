@@ -573,7 +573,7 @@ public:
     }
 
     /**
-     * \b Effects: Returns an ordered iterator to the first element contained in the priority queue.
+     * \b Effects: Returns an ordered iterator to the end of the priority queue.
      *
      * \b Note: Ordered iterators traverse the priority queue in heap order.
      * */
