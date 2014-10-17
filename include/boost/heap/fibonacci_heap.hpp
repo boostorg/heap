@@ -598,6 +598,7 @@ public:
 
         roots.splice(roots.end(), rhs.roots);
 
+        rhs.top_element = NULL;
         rhs.set_size(0);
 
         super_t::set_stability_count((std::max)(super_t::get_stability_count(),
