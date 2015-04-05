@@ -731,7 +731,7 @@ private:
                 aux[node_rank] = n;
             }
 
-            if (super_t::operator()(top_element->value, n->value))
+            if (!super_t::operator()(n->value, top_element->value))
                 top_element = n;
         }
         while (it != roots.end());
