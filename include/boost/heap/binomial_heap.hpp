@@ -516,8 +516,7 @@ public:
 
         siftdown(n);
 
-        if (n == top_element)
-            update_top_element();
+        update_top_element();
     }
 
     /**
