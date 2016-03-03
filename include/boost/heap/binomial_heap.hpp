@@ -791,7 +791,6 @@ private:
                 trees.insert(it, *n);
             }
             n->add_child(parent);
-            BOOST_HEAP_ASSERT(parent->child_count() == n->child_count());
         }
     }
 
