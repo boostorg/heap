@@ -9,6 +9,8 @@
 #ifndef BOOST_HEAP_MERGE_HPP
 #define BOOST_HEAP_MERGE_HPP
 
+#include <algorithm>
+
 #include <boost/concept/assert.hpp>
 #include <boost/heap/heap_concepts.hpp>
 #include <boost/type_traits/is_same.hpp>
