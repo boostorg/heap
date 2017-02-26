@@ -534,7 +534,7 @@ class stable_heap_iterator:
 
 public:
     stable_heap_iterator(void):
-        super_t(0)
+        super_t()
     {}
 
     explicit stable_heap_iterator(ContainerIterator const & it):

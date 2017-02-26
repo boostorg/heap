@@ -195,11 +195,11 @@ class tree_iterator:
 
 public:
     tree_iterator(void):
-        adaptor_type(0), unvisited_nodes(ValueCompare())
+        adaptor_type(), unvisited_nodes(ValueCompare())
     {}
 
     tree_iterator(ValueCompare const & cmp):
-        adaptor_type(0), unvisited_nodes(cmp)
+        adaptor_type(), unvisited_nodes(cmp)
     {}
 
     tree_iterator(const Node * it, ValueCompare const & cmp):
@@ -212,7 +212,7 @@ public:
     /* fills the iterator from a list of possible top nodes */
     template <typename NodePointerIterator>
     tree_iterator(NodePointerIterator begin, NodePointerIterator end, const Node * top_node, ValueCompare const & cmp):
-        adaptor_type(0), unvisited_nodes(cmp)
+        adaptor_type(), unvisited_nodes(cmp)
     {
         BOOST_STATIC_ASSERT(ordered_iterator);
         if (begin == end)
@@ -321,7 +321,7 @@ class recursive_tree_iterator:
 
 public:
     recursive_tree_iterator(void):
-        adaptor_type(0)
+        adaptor_type()
     {}
 
     explicit recursive_tree_iterator(NodeIterator const & it):
