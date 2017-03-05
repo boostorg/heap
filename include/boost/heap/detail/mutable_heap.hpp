@@ -190,7 +190,7 @@ public:
         friend class priority_queue_mutable_wrapper;
 
         iterator_base(void):
-            super_t()
+            super_t(0)
         {}
 
         template <typename T>
@@ -235,11 +235,11 @@ public:
 
     public:
         ordered_iterator(void):
-            adaptor_type(), unvisited_nodes(indirect_cmp()), q_(NULL)
+            adaptor_type(0), unvisited_nodes(indirect_cmp()), q_(NULL)
         {}
 
         ordered_iterator(const priority_queue_mutable_wrapper * q, indirect_cmp const & cmp):
-            adaptor_type(), unvisited_nodes(cmp), q_(q)
+            adaptor_type(0), unvisited_nodes(cmp), q_(q)
         {}
 
         ordered_iterator(const_list_iterator it, const priority_queue_mutable_wrapper * q, indirect_cmp const & cmp):
