@@ -11,7 +11,7 @@
 
 #define GENERATE_TEST_DATA(INDEX)                           \
     test_data data = make_test_data(test_size, 0, 1);       \
-    std::random_shuffle(data.begin(), data.end());          \
+    random_shuffle(data.begin(), data.end());               \
                                                             \
     test_data data_q (data.begin(), data.begin() + INDEX);  \
     test_data data_r (data.begin() + INDEX, data.end());    \
