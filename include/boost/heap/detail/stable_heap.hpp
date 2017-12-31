@@ -578,7 +578,7 @@ struct extract_allocator_types
     typedef typename traits::size_type size_type;
     typedef typename traits::difference_type difference_type;
     typedef typename Alloc::value_type& reference;
-    typedef typename const Alloc::value_type& const_reference;
+    typedef typename Alloc::value_type const& const_reference;
     typedef typename traits::pointer pointer;
     typedef typename traits::const_pointer const_pointer;
 #endif
