@@ -1,4 +1,4 @@
-// // boost heap: d-ary heap as containter adaptor
+// // boost heap: d-ary heap as container adaptor
 //
 // Copyright (C) 2010 Tim Blechmann
 //
