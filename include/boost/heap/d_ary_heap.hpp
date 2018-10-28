@@ -16,6 +16,7 @@
 #include <boost/assert.hpp>
 
 #include <boost/mem_fn.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/ordered_adaptor_iterator.hpp>
 #include <boost/heap/detail/stable_heap.hpp>

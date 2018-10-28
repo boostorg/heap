@@ -11,6 +11,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/heap/heap_concepts.hpp>
 

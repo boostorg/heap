@@ -15,6 +15,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/array.hpp>
+#include <boost/mpl/if.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/heap_node.hpp>

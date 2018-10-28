@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include <boost/mpl/if.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/heap/heap_concepts.hpp>
 #include <boost/type_traits/is_same.hpp>

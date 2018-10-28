@@ -12,6 +12,7 @@
 #include <functional>
 #include <vector>
 
+#include <boost/mpl/if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <queue>
 

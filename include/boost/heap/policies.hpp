@@ -13,6 +13,7 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/void.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/concept_check.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
