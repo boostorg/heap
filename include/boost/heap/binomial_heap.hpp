@@ -19,6 +19,7 @@
 #include <boost/heap/detail/heap_node.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
+#include <boost/type_traits/integral_constant.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -48,7 +49,7 @@ struct make_binomial_heap_base
 {
     static const bool constant_time_size = parameter::binding<Parspec,
                                                               tag::constant_time_size,
-                                                              boost::mpl::true_
+                                                              boost::true_type
                                                              >::type::value;
     typedef typename detail::make_heap_base<T, Parspec, constant_time_size>::type base_type;
     typedef typename detail::make_heap_base<T, Parspec, constant_time_size>::allocator_argument allocator_argument;

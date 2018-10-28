@@ -425,7 +425,7 @@ struct select_dary_heap
 {
     static const bool is_mutable = extract_mutable<BoundArgs>::value;
 
-    typedef typename mpl::if_c< is_mutable,
+    typedef typename boost::conditional< is_mutable,
                                 priority_queue_mutable_wrapper<d_ary_heap<T, BoundArgs, nop_index_updater > >,
                                 d_ary_heap<T, BoundArgs, nop_index_updater >
                               >::type type;
@@ -589,7 +589,7 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::push
-    typename mpl::if_c<is_mutable, handle_type, void>::type push(value_type const & v)
+    typename boost::conditional<is_mutable, handle_type, void>::type push(value_type const & v)
     {
         return super_t::push(v);
     }
@@ -597,7 +597,7 @@ public:
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     /// \copydoc boost::heap::priority_queue::emplace
     template <class... Args>
-    typename mpl::if_c<is_mutable, handle_type, void>::type emplace(Args&&... args)
+    typename boost::conditional<is_mutable, handle_type, void>::type emplace(Args&&... args)
     {
         return super_t::emplace(std::forward<Args>(args)...);
     }

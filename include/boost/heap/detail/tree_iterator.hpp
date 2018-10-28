@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <queue>
 
 namespace boost  {
@@ -195,7 +196,7 @@ class tree_iterator:
 
     friend class boost::iterator_core_access;
 
-    typedef typename boost::mpl::if_c< ordered_iterator,
+    typedef typename boost::conditional< ordered_iterator,
                                        ordered_tree_iterator_storage<ValueType, const Node*, Alloc, ValueCompare, ValueExtractor>,
                                        unordered_tree_iterator_storage<const Node*, Alloc, ValueCompare>
                                      >::type

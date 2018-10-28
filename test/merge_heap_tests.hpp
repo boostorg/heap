@@ -66,7 +66,7 @@ struct pri_queue_test_heap_merge
 template <typename pri_queue>
 void run_merge_tests(void)
 {
-    boost::mpl::if_c<pri_queue::is_mergable,
+    boost::conditional<pri_queue::is_mergable,
                      pri_queue_test_merge<pri_queue>,
                      dummy_run
                     >::type::run();
