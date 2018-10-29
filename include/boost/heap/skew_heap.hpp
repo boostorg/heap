@@ -20,6 +20,7 @@
 #include <boost/heap/detail/heap_node.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
+#include <boost/type_traits/integral_constant.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -178,7 +179,7 @@ struct make_skew_heap_base
 {
     static const bool constant_time_size = parameter::binding<BoundArgs,
                                                               tag::constant_time_size,
-                                                              boost::mpl::true_
+                                                              boost::true_type
                                                              >::type::value;
 
     typedef typename make_heap_base<T, BoundArgs, constant_time_size>::type base_type;
@@ -188,7 +189,7 @@ struct make_skew_heap_base
     static const bool is_mutable = extract_mutable<BoundArgs>::value;
     static const bool store_parent_pointer = parameter::binding<BoundArgs,
                                                               tag::store_parent_pointer,
-                                                              boost::mpl::false_>::type::value || is_mutable;
+                                                              boost::false_type>::type::value || is_mutable;
 
     typedef skew_heap_node<typename base_type::internal_type, store_parent_pointer> node_type;
 
@@ -308,7 +309,7 @@ class skew_heap:
         typedef boost::array<node_pointer, 2> child_list_type;
         typedef typename child_list_type::iterator child_list_iterator;
 
-        typedef typename boost::mpl::if_c<false,
+        typedef typename boost::conditional<false,
                                         detail::recursive_tree_iterator<node,
                                                                         child_list_iterator,
                                                                         const value_type,
@@ -375,7 +376,7 @@ public:
     static const bool has_reserve = false;
     static const bool is_mutable = detail::extract_mutable<bound_args>::value;
 
-    typedef typename mpl::if_c<is_mutable, typename implementation_defined::handle_type, void*>::type handle_type;
+    typedef typename boost::conditional<is_mutable, typename implementation_defined::handle_type, void*>::type handle_type;
 
     /// \copydoc boost::heap::priority_queue::priority_queue(value_compare const &)
     explicit skew_heap(value_compare const & cmp = value_compare()):
@@ -433,9 +434,9 @@ public:
      * \b Complexity: Logarithmic (amortized).
      *
      * */
-    typename mpl::if_c<is_mutable, handle_type, void>::type push(value_type const & v)
+    typename boost::conditional<is_mutable, handle_type, void>::type push(value_type const & v)
     {
-        typedef typename mpl::if_c<is_mutable, push_handle, push_void>::type push_helper;
+        typedef typename boost::conditional<is_mutable, push_handle, push_void>::type push_helper;
         return push_helper::push(this, v);
     }
 
@@ -447,9 +448,9 @@ public:
      *
      * */
     template <typename... Args>
-    typename mpl::if_c<is_mutable, handle_type, void>::type emplace(Args&&... args)
+    typename boost::conditional<is_mutable, handle_type, void>::type emplace(Args&&... args)
     {
-        typedef typename mpl::if_c<is_mutable, push_handle, push_void>::type push_helper;
+        typedef typename boost::conditional<is_mutable, push_handle, push_void>::type push_helper;
         return push_helper::emplace(this, std::forward<Args>(args)...);
     }
 #endif
