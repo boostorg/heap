@@ -11,7 +11,7 @@
 
 #include <boost/concept_check.hpp>
 #include <boost/parameter/name.hpp>
-#include <boost/parameter/aux_/template_keyword.hpp>
+#include <boost/parameter/template_keyword.hpp>
 #include <boost/parameter/aux_/void.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/parameter/parameters.hpp>
