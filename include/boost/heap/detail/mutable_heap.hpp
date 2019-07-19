@@ -23,6 +23,13 @@ namespace boost  {
 namespace heap   {
 namespace detail {
 
+struct nop_index_updater
+{
+    template <typename T>
+    static void run(T &, std::size_t)
+    {}
+};
+
 /* wrapper for a mutable heap container adaptors
  *
  * this wrapper introduces an additional indirection. the heap is not constructed from objects,

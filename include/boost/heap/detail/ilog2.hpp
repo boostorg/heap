@@ -33,7 +33,7 @@ struct log2<unsigned int>
 {
     unsigned int operator()(unsigned int value)
     {
-        return sizeof(unsigned int)*8 - __builtin_clz(value - 1);
+        return sizeof(unsigned int)*8 - __builtin_clz(value) - 1;
     }
 };
 
@@ -42,7 +42,7 @@ struct log2<unsigned long>
 {
     unsigned long operator()(unsigned long value)
     {
-        return sizeof(unsigned long)*8 - __builtin_clzl(value - 1);
+        return sizeof(unsigned long)*8 - __builtin_clzl(value) - 1;
     }
 };
 
