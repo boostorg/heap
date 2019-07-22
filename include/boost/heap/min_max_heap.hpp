@@ -36,7 +36,10 @@
 #define BOOST_HEAP_MIN_MAX_HEAP_HPP
 
 #include <vector>
-#include <cmath>
+#include <cstring> // memset
+#include <iostream> //TODO remove
+
+#include <boost/assert.hpp>
 
 #include <boost/heap/policies.hpp>
 
@@ -64,6 +67,9 @@ namespace detail {
 
 template<unsigned int Base, typename IntType>
 struct tree_depth;
+
+template<unsigned int Base, typename IntType>
+struct min_max_ordered_iterator_status;
 
 typedef parameter::parameters<boost::parameter::optional<tag::arity>,
                               boost::parameter::optional<tag::allocator>,
@@ -537,7 +543,7 @@ public:
         BOOST_ASSERT(!empty());
         BOOST_ASSERT(index < size());
 
-        swap(index, last());//TODO last()
+        swap(index, last());
         q_.pop_back();
 
         if(!empty() && index != size())
@@ -577,6 +583,12 @@ public:
     template<class Order>
     struct iterator_dispatcher
     {
+        iterator_dispatcher(size_type max = 0) :
+            status(max)
+        {}
+
+        min_max_ordered_iterator_status<D, size_type> status;
+
         static size_type max_index(const min_max_heap * heap)
         {
             return heap->last();
@@ -606,7 +618,9 @@ public:
 public:
     struct ordered_iterator_dispatcher : iterator_dispatcher<ordered_iterator_dispatcher>
     {
-
+        ordered_iterator_dispatcher(size_type max):
+            iterator_dispatcher<ordered_iterator_dispatcher>(max)
+        {}
     };
 
 public:
@@ -621,12 +635,12 @@ public:
 public:
     ordered_iterator ordered_begin(void) const
     {
-        return ordered_iterator(root(), this, super_t::get_internal_cmp());
+        return ordered_iterator(root(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(this->last()));
     }
 
     ordered_iterator ordered_end(void) const
     {
-        return ordered_iterator(q_.size(), this, super_t::get_internal_cmp());
+        return ordered_iterator(q_.size(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(this->last()));
     }
 
 public:
@@ -704,6 +718,215 @@ struct tree_depth<2, IntType>
     IntType operator () (IntType index) const
     {
         return ::boost::heap::log2(index + 1);
+    }
+};
+
+template<unsigned int Base, typename IntType>
+struct ipower
+{
+    ipower(IntType max)
+    {
+        if (1 <= max) {
+            power.resize(max + 1);
+            power[0] = 1;
+
+            for (IntType exp = 1; exp <= max; ++exp) {
+                power[exp] = power[exp-1] * Base;
+            }
+        }
+    }
+
+    std::vector<IntType> power;
+
+    IntType operator () (IntType exp) const
+    {
+        return power[exp];
+    }
+
+    static IntType pow(IntType exp, IntType res = 1)
+    {
+        return exp == 0 ? res : pow(exp - 1, res * Base);
+    }
+};
+
+template<typename IntType>
+struct ipower<2, IntType>
+{
+    ipower(IntType) {}
+
+    IntType operator () (IntType exp) const
+    {
+        return 1 << exp;
+    }
+
+    static IntType pow(IntType exp)
+    {
+        return 1 << exp;
+    }
+};
+
+template<unsigned int Base, typename IntType>
+struct min_max_ordered_iterator_status_base
+{
+    min_max_ordered_iterator_status_base(IntType max_index = 0) :
+        max_depth(boost::heap::detail::tree_depth<Base, IntType>()(max_index)),
+        power(max_depth),
+        candidates(std::max(ipower<Base, IntType>::pow(max_depth) / 8, (IntType)1), 0)
+    {}
+
+    const IntType max_depth;
+    const ipower<Base, IntType> power;
+    std::vector<uint8_t> candidates;
+
+    IntType number_of_final_heirs_for(IntType current_depth) const
+    {
+        return power(max_depth - current_depth);
+    }
+
+    void positions(IntType index, IntType & chunk, IntType & offset, IntType & heirs)
+    {
+        IntType depth = boost::heap::detail::tree_depth<Base, IntType>()(index);
+
+        const IntType local_index = index - (power(depth) - 1)/(Base - 1);
+
+        heirs = number_of_final_heirs_for(depth);
+
+        const IntType candidate_index = local_index * heirs;
+
+        chunk  = candidate_index / 8;
+        offset = candidate_index % 8;
+    }
+
+    void positions_by_8(IntType index, IntType & chunk, IntType & offset, IntType & heirs_oct, IntType & heirs_left)
+    {
+        IntType heirs;
+        positions(index, chunk, offset, heirs);
+
+        heirs_oct = heirs / 8;
+        heirs_left = heirs % 8;
+    }
+};
+
+template<unsigned int Base, typename IntType>
+struct min_max_ordered_iterator_status : min_max_ordered_iterator_status_base<Base, IntType>
+{
+    typedef min_max_ordered_iterator_status_base<Base, IntType> base;
+
+    min_max_ordered_iterator_status(IntType max_index = 0) :
+        base(max_index)
+    {}
+
+    void set(IntType index)
+    {
+        IntType chunk, offset, heirs;
+        base::positions(index, chunk, offset, heirs);
+
+        const IntType first_heirs = std::min(heirs, 8 - offset);
+        if (first_heirs < 8) {
+            base::candidates[chunk] |= (0xFF >> (offset + (8 - offset - first_heirs))) << (8 - offset - first_heirs);
+            ++chunk;
+            heirs -= first_heirs;
+        }
+
+        const IntType heirs_octuple = heirs / 8;
+        const IntType last_heirs = heirs % 8;
+
+        std::memset(base::candidates.data() + chunk, 0xFF, heirs_octuple);
+        chunk += heirs_octuple;
+
+        base::candidates[chunk] |= 0xFF << (8 - last_heirs);
+    }
+
+    void reset(IntType index)
+    {
+        IntType chunk, offset, heirs;
+        base::positions(index, chunk, offset, heirs);
+
+        const IntType first_heirs = std::min(heirs, 8 - offset);
+        if (first_heirs < 8) {
+            base::candidates[chunk] &= ~((0xFF >> (offset + (8 - offset - first_heirs))) << (8 - offset - first_heirs));
+            ++chunk;
+            heirs -= first_heirs;
+        }
+
+        const IntType heirs_octuple = heirs / 8;
+        const IntType last_heirs = heirs % 8;
+
+        std::memset(base::candidates.data() + chunk, 0, heirs_octuple);
+        chunk += heirs_octuple;
+
+        base::candidates[chunk] &= ~(0xFF << (8 - last_heirs));
+    }
+
+    bool is_complete(IntType index)
+    {
+        IntType chunk, offset, heirs;
+        base::positions(index, chunk, offset, heirs);
+
+        const IntType first_heirs = std::min(heirs, 8 - offset);
+        if (first_heirs < 8) {
+            if(!(base::candidates[chunk] & ((0xFF >> (offset + (8 - offset - first_heirs))) << (8 - offset - first_heirs)))) return false;
+            ++chunk;
+            heirs -= first_heirs;
+        }
+
+        while (8 <= heirs) {
+            if (base::candidates[chunk] != 0xFF)
+                return false;
+            ++chunk;
+            heirs -= 8;
+        }
+
+        return (heirs && base::candidates[chunk] & (0xFF << (8 - heirs))) || !heirs;
+    }
+};
+
+template<typename IntType>
+struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_status_base<2, IntType>
+{
+    typedef min_max_ordered_iterator_status_base<2, IntType> base;
+
+    min_max_ordered_iterator_status(IntType max_index = 0) :
+        base(max_index),
+        masks{0, 0x01, 0x03, 0, 0x0F, 0, 0, 0}
+    {}
+
+    const uint8_t masks[8];
+
+    void set(IntType index)
+    {
+        IntType chunk, offset, heirs_octuple, heirs_left;
+        base::positions_by_8(index, chunk, offset, heirs_octuple, heirs_left);
+
+        std::memset(base::candidates.data() + chunk, 0xFF, heirs_octuple);
+        // disjoint heirs
+        base::candidates[chunk] |= masks[heirs_left] << (8 - heirs_left - offset);
+    }
+
+    void reset(IntType index)
+    {
+        IntType chunk, offset, heirs_octuple, heirs_left;
+        base::positions_by_8(index, chunk, offset, heirs_octuple, heirs_left);
+
+        std::memset(base::candidates.data() + chunk, 0, heirs_octuple);
+        // disjoint heirs
+        base::candidates[chunk] &= ~(masks[heirs_left] << (8 - heirs_left - offset));
+    }
+
+    bool is_complete(IntType index)
+    {
+        IntType chunk, offset, heirs;
+        base::positions(index, chunk, offset, heirs);
+
+        while (8 <= heirs) {
+            if (base::candidates[chunk] != 0xFF)
+                return false;
+            ++chunk;
+            heirs -= 8;
+        }
+        //disjoint heirs
+        const uint8_t mask = masks[heirs] << (8 - heirs - offset);
+        return (mask && base::candidates[chunk] & mask) || !mask;
     }
 };
 

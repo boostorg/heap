@@ -92,6 +92,14 @@ public:
         discover_nodes(initial_index);
     }
 
+    ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
+        Dispatcher(dispatcher),
+        container(container), current_index(initial_index),
+        unvisited_nodes(compare_by_heap_value(container, cmp))
+    {
+        discover_nodes(initial_index);
+    }
+
 private:
     bool equal (ordered_adaptor_iterator const & rhs) const
     {
