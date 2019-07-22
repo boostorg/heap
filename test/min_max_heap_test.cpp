@@ -237,6 +237,12 @@ struct dispatcher_queue : boost::heap::detail::min_max_heap<T, BoundArgs, IndexU
     }
 };
 
+/*
+ * Testing the iterator dispatcher for ordered iterator only
+ * (true template parameter) because the reverse iterator
+ * dispatcher merely switches the result of is_on_compare_level
+ * while the tree examination remains the same.
+*/
 template <unsigned int D>
 void run_min_max_heap_iterator_dispatcher_upward_test()
 {
@@ -248,7 +254,7 @@ void run_min_max_heap_iterator_dispatcher_upward_test()
         boost::parameter::void_,
         boost::parameter::void_>::type signature;
     typedef dispatcher_queue<int, signature, boost::heap::detail::nop_index_updater> pri_queue;
-    typedef typename pri_queue::iterator_dispatcher iterator_dispatcher;
+    typedef typename pri_queue::template iterator_dispatcher<true> iterator_dispatcher;
 
     pri_queue q;
     std::pair<long unsigned int, long unsigned int> regular;
@@ -291,7 +297,7 @@ BOOST_AUTO_TEST_CASE( min_max_heap_iterator_dispatcher_test )
         boost::parameter::void_,
         boost::parameter::void_>::type signature;
     typedef dispatcher_queue<int, signature, boost::heap::detail::nop_index_updater> pri_queue;
-    typedef typename pri_queue::iterator_dispatcher iterator_dispatcher;
+    typedef typename pri_queue::template iterator_dispatcher<true> iterator_dispatcher;
 
     pri_queue q;
     std::pair<long unsigned int, long unsigned int> regular;
@@ -351,6 +357,8 @@ void run_min_max_heap_test(void)
     run_merge_tests<pri_queue>();
 
     run_ordered_iterator_tests<pri_queue>();
+    run_reverse_ordered_iterator_tests<pri_queue>();
+
 #if 0
     if (stable) {
         typedef boost::heap::min_max_heap<q_tester, boost::heap::arity<D>,

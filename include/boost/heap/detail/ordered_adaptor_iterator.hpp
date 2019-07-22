@@ -31,6 +31,10 @@ namespace detail {
  * * static internal_type const & get_internal_value(const ContainerType * heap, size_type index); // get internal value at index
  * * static value_type const & get_value(internal_type const & arg) const; // get value_type from internal_type
  *
+ * Requirements for Derived:
+ *
+ * * void discover_nodes(size_t index); // return children
+ *
  * */
 template <typename Derived,
           typename ValueType,
@@ -252,6 +256,14 @@ public:
     extended_ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
         base(initial_index, container, cmp, dispatcher)
     {}
+
+    extended_ordered_adaptor_iterator(size_t initial_index, std::pair<size_t, size_t> initial_indexes, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
+        base(initial_index, container, cmp, dispatcher)
+    {
+        for (size_t i = initial_indexes.first; i <= initial_indexes.second; ++i)
+            if (i != initial_index)
+                base::unvisited_nodes.push(i);
+    }
 
     void discover_nodes(size_t index)
     {

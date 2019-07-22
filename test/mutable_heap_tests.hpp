@@ -323,3 +323,9 @@ void run_ordered_iterator_tests()
 {
     pri_queue_test_ordered_iterators<pri_queue>();
 }
+
+template <typename pri_queue>
+void run_reverse_ordered_iterator_tests()
+{
+    pri_queue_test_reverse_ordered_iterators<pri_queue>();
+}

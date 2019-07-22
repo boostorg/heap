@@ -579,6 +579,7 @@ public:
     }
 
 public:
+    template<bool Forward>
     struct iterator_dispatcher
     {
         iterator_dispatcher(size_type max_index = 0) :
@@ -590,11 +591,6 @@ public:
         static size_type max_index(const min_max_heap * heap)
         {
             return heap->last();
-        }
-
-        static bool is_leaf(const min_max_heap * heap, size_type index)
-        {
-            return (heap->root() < index && index <= D) || index == heap->last() + 1;
         }
 
         std::pair<size_type, size_type> get_child_nodes(const min_max_heap * heap, size_type index, std::pair<size_type, size_type> & extra_child_nodes)
@@ -630,7 +626,7 @@ public:
              * 4 5 6 7 8           if 7 has already been visited.
             */
             const size_type last = heap->last();
-            const bool on_compare_level = heap->is_on_compare_level(index);
+            const bool on_compare_level = !(Forward ^ heap->is_on_compare_level(index));
 
             if (on_compare_level) {
                 std::pair<size_type, size_type> children = heap->children(index);
@@ -697,11 +693,16 @@ public:
     };
 
 public:
-    struct ordered_iterator_dispatcher : iterator_dispatcher
+    struct ordered_iterator_dispatcher : iterator_dispatcher<true>
     {
         ordered_iterator_dispatcher(size_type max):
-            iterator_dispatcher(max)
+            iterator_dispatcher<true>(max)
         {}
+
+        static bool is_leaf(const min_max_heap * heap, size_type index)
+        {
+            return (heap->root() < index && index <= D) || index == heap->last() + 1;
+        }
     };
 
 public:
@@ -725,9 +726,16 @@ public:
     }
 
 public:
-    struct reverse_ordered_iterator_dispatcher : iterator_dispatcher
+    struct reverse_ordered_iterator_dispatcher : iterator_dispatcher<false>
     {
+        reverse_ordered_iterator_dispatcher(size_type max) :
+            iterator_dispatcher<false>(max)
+        {}
 
+        static bool is_leaf(const min_max_heap * heap, size_type index)
+        {
+            return index == heap->root() || index == heap->last() + 1;
+        }
     };
 
 public:
@@ -739,7 +747,7 @@ public:
 
         bool operator () (typename super_t::internal_type const & lhs, typename super_t::internal_type const & rhs) const
         {
-            return super_t::internal_compare(rhs, lhs);
+            return super_t::internal_compare::operator () (rhs, lhs);
         }
       };
 
@@ -754,12 +762,23 @@ public:
 public:
     reverse_ordered_iterator reverse_ordered_begin(void) const
     {
-        return revese_ordered_iterator(root(), this, super_t::get_internal_cmp());
+        size_type max_index = root();
+        std::pair<size_type, size_type> initial_indexes = std::make_pair(1, 0);
+
+        if (1 < size()) {
+            max_index = index_of_max();
+            // The initial_indexes range will contain max_index and this is fine
+            // as long as the adaptor is storing upcoming indexes in a set.
+            initial_indexes.first = 1;
+            initial_indexes.second = std::min<size_type>(D, last());
+        }
+
+        return reverse_ordered_iterator(max_index, initial_indexes, this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(size()));
     }
 
     reverse_ordered_iterator reverse_ordered_end(void) const
     {
-        return revese_ordered_iterator(q_.size(), this, super_t::get_internal_cmp());
+        return reverse_ordered_iterator(size(), this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(root()));
     }
     /* iterators */
 };
@@ -1085,6 +1104,7 @@ class min_max_heap:
         BOOST_HEAP_TYPEDEF_FROM_SUPER_T(iterator)
         BOOST_HEAP_TYPEDEF_FROM_SUPER_T(const_iterator)
         BOOST_HEAP_TYPEDEF_FROM_SUPER_T(ordered_iterator)
+        BOOST_HEAP_TYPEDEF_FROM_SUPER_T(reverse_ordered_iterator)
         BOOST_HEAP_TYPEDEF_FROM_SUPER_T(handle_type)
     };
 #undef BOOST_HEAP_TYPEDEF_FROM_SUPER_T
@@ -1110,6 +1130,7 @@ public:
     typedef typename implementation_defined::iterator iterator;
     typedef typename implementation_defined::const_iterator const_iterator;
     typedef typename implementation_defined::ordered_iterator ordered_iterator;
+    typedef typename implementation_defined::reverse_ordered_iterator reverse_ordered_iterator;
     typedef typename implementation_defined::handle_type handle_type;
 
 public:
@@ -1445,6 +1466,26 @@ public:
     ordered_iterator ordered_end(void) const
     {
         return super_t::ordered_end();
+    }
+
+    /**
+     * \b Effects: Returns a reverse ordered iterator to the last element contained in the priority queue.
+     *
+     * \b Note: Reverse ordered iterators traverse the priority queue in heap reverse order.
+     * */
+    reverse_ordered_iterator reverse_ordered_begin(void) const
+    {
+        return super_t::reverse_ordered_begin();
+    }
+
+    /**
+     * \b Effects: Returns a reverse ordered iterator to the beginning of the priority queue.
+     *
+     * \b Note: Reverse ordered iterators traverse the priority queue in heap reverse order.
+     * */
+    reverse_ordered_iterator reverse_ordered_end(void) const
+    {
+        return super_t::reverse_ordered_end();
     }
 
     /// \copydoc boost::heap::priority_queue::reserve
