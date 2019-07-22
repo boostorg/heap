@@ -359,7 +359,6 @@ void run_min_max_heap_test(void)
     run_ordered_iterator_tests<pri_queue>();
     run_reverse_ordered_iterator_tests<pri_queue>();
 
-#if 0
     if (stable) {
         typedef boost::heap::min_max_heap<q_tester, boost::heap::arity<D>,
                                           boost::heap::stable<stable>
@@ -367,7 +366,7 @@ void run_min_max_heap_test(void)
 
         run_stable_heap_tests<stable_pri_queue>();
     }
-#endif
+
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     cmpthings ord;
     boost::heap::min_max_heap<thing, boost::heap::arity<D>, boost::heap::compare<cmpthings>, boost::heap::stable<stable> > vpq(ord);
@@ -381,4 +380,12 @@ BOOST_AUTO_TEST_CASE( min_max_heap_test )
     run_min_max_heap_test<3, false>();
     run_min_max_heap_test<4, false>();
     run_min_max_heap_test<5, false>();
+}
+
+BOOST_AUTO_TEST_CASE( min_max_heap_stable_test )
+{
+    run_min_max_heap_test<2, true>();
+    run_min_max_heap_test<3, true>();
+    run_min_max_heap_test<4, true>();
+    run_min_max_heap_test<5, true>();
 }
