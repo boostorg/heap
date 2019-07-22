@@ -23,7 +23,7 @@
 #include <set>
 #include <cmath>
 
-template<unsigned int D>
+template <unsigned int D>
 void run_tree_depth_test(void)
 {
     boost::heap::detail::tree_depth<D, unsigned int> depth;
@@ -31,11 +31,9 @@ void run_tree_depth_test(void)
     BOOST_REQUIRE(depth(0) == 0);
 
     unsigned int index = 1;
-    for (unsigned int i = 1, count = D; i < 32/D; ++i, count *= D) {
-        for (unsigned int j = 0; j < count; ++j, ++index) {
+    for (unsigned int i = 1, count = D; i < 32/D; ++i, count *= D)
+        for (unsigned int j = 0; j < count; ++j, ++index)
             BOOST_REQUIRE(depth(index) == i);
-        }
-    }
 }
 
 BOOST_AUTO_TEST_CASE( tree_depth_test )
@@ -48,14 +46,6 @@ BOOST_AUTO_TEST_CASE( tree_depth_test )
   run_tree_depth_test<3>();
   run_tree_depth_test<4>();
   run_tree_depth_test<5>();
-}
-
-void print(const std::vector<uint8_t> & v)
-{
-    for (std::vector<uint8_t>::const_iterator it = v.begin(); it != v.end(); ++it) {
-        std::cerr << std::bitset<8>(*it) << " ";
-    }
-    std::cerr << std::endl;
 }
 
 unsigned int last_line_index(unsigned int base, unsigned int max, unsigned int & depth)
@@ -115,7 +105,7 @@ void masks(unsigned int base, unsigned int max, unsigned int index, std::set<uns
             umask.insert(i);
 }
 
-BOOST_AUTO_TEST_CASE( run_expected_mask_test )
+BOOST_AUTO_TEST_CASE( min_max_heap_expected_mask_test )
 {
     std::set<unsigned int> mask;
     std::set<unsigned int> umask;
@@ -162,8 +152,8 @@ BOOST_AUTO_TEST_CASE( run_expected_mask_test )
 #undef LOCALTEST
 }
 
-template<unsigned int D>
-void run_min_max_ordered_iterator_status(unsigned int max)
+template <unsigned int D>
+void run_min_max_heap_ordered_iterator_status_test(unsigned int max)
 {
     std::set<unsigned int> mask;
     std::set<unsigned int> umask;
@@ -176,6 +166,7 @@ void run_min_max_ordered_iterator_status(unsigned int max)
                 boost::heap::detail::min_max_ordered_iterator_status<D, unsigned int> status(max_index);
 
                 for (std::set<unsigned int>::const_iterator it = mask.begin(); it != mask.end(); ++it) {
+                    BOOST_REQUIRE(!status.is_complete(index));
                     status.set(*it);
                     BOOST_REQUIRE(status.is_complete(*it));
                 }
@@ -197,6 +188,7 @@ void run_min_max_ordered_iterator_status(unsigned int max)
                 boost::heap::detail::min_max_ordered_iterator_status<D, unsigned int> status(max_index);
 
                 status.set(index);
+                BOOST_REQUIRE(status.is_complete(index));
 
                 for (std::set<unsigned int>::const_iterator it = mask.begin(); it != mask.end(); ++it)
                     BOOST_REQUIRE(status.is_complete(*it));
@@ -214,36 +206,131 @@ void run_min_max_ordered_iterator_status(unsigned int max)
     }
 }
 
-BOOST_AUTO_TEST_CASE( run_min_max_ordered_iterator_status_test )
+BOOST_AUTO_TEST_CASE( min_max_heap_ordered_iterator_status_test )
 {
-    run_min_max_ordered_iterator_status<2>(7);
-    run_min_max_ordered_iterator_status<3>(3);
-    run_min_max_ordered_iterator_status<4>(2);
-    run_min_max_ordered_iterator_status<5>(2);
+    run_min_max_heap_ordered_iterator_status_test<2>(7);
+    run_min_max_heap_ordered_iterator_status_test<3>(3);
+    run_min_max_heap_ordered_iterator_status_test<4>(2);
+    run_min_max_heap_ordered_iterator_status_test<5>(2);
 }
 
-BOOST_AUTO_TEST_CASE( min_max_heap_paper_test )
+template <typename T,
+          class BoundArgs,
+          class IndexUpdater>
+struct dispatcher_queue : boost::heap::detail::min_max_heap<T, BoundArgs, IndexUpdater>
 {
-    //int buffer[] = {5, 65, 80, 25, 37, 8, 15, 57, 36, 45, 59, 20, 14, 32, 18, 28, 30, 34, 27, 39, 38, 45, 50, 15, 12, 13, 10, 30, 31, 16, 17};
+    typedef boost::heap::detail::min_max_heap<T, BoundArgs, IndexUpdater> base;
 
-    typedef boost::heap::min_max_heap<int,
-                                      boost::heap::arity<2>,
-                                      boost::heap::stable<false>,
-                                      boost::heap::compare<std::less<int> >,
-                                      boost::heap::allocator<std::allocator<int> > > pri_queue;
+    void clear()
+    {
+        base::clear();
+    }
+
+    void set(unsigned int i)
+    {
+        base::clear();
+
+        while (0 < i) {
+            base::push(i);
+            --i;
+        }
+    }
+};
+
+template <unsigned int D>
+void run_min_max_heap_iterator_dispatcher_upward_test()
+{
+    typedef typename boost::heap::detail::min_max_heap_signature::bind<
+        boost::heap::arity<D>,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_>::type signature;
+    typedef dispatcher_queue<int, signature, boost::heap::detail::nop_index_updater> pri_queue;
+    typedef typename pri_queue::iterator_dispatcher iterator_dispatcher;
 
     pri_queue q;
+    std::pair<long unsigned int, long unsigned int> regular;
+    std::pair<long unsigned int, long unsigned int> extra;
 
-    q.push(31);
-    q.push(17);
-    q.push(24);
-    q.push(25);
-    q.push(37);
-    q.push(8);
-    q.push(5);
+    {
+        q.set(D * D + 2); extra.first = 1; extra.second = 0;
+        iterator_dispatcher dispatcher = iterator_dispatcher(q.size() - 1);
+
+        regular = dispatcher.get_child_nodes(&q, D * D + 1, extra);
+        BOOST_REQUIRE(regular.first == D && regular.second == D);
+        BOOST_REQUIRE(extra.first == 1 && extra.second == 0);
+    }
+
+    q.clear();
+
+    {
+        q.set(D * (D * D + 1) + 2); extra.first = 1; extra.second = 0;
+        iterator_dispatcher dispatcher = iterator_dispatcher(q.size() - 1);
+
+        for (unsigned int i = 1; i <= D; ++i) {
+            regular = dispatcher.get_child_nodes(&q, D * D + 1 + i, extra);
+            BOOST_REQUIRE(regular.first == 1 && regular.second == 0);
+            BOOST_REQUIRE(extra.first == 1 && extra.second == 0);
+        }
+
+        regular = dispatcher.get_child_nodes(&q, D * (D * D + 1) + 1, extra);
+        BOOST_REQUIRE(regular.first == D && regular.second == D);
+        BOOST_REQUIRE(extra.first == 1 && extra.second == 0);
+    }
 }
 
-template<int D, bool stable>
+BOOST_AUTO_TEST_CASE( min_max_heap_iterator_dispatcher_test )
+{
+    typedef typename boost::heap::detail::min_max_heap_signature::bind<
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_,
+        boost::parameter::void_>::type signature;
+    typedef dispatcher_queue<int, signature, boost::heap::detail::nop_index_updater> pri_queue;
+    typedef typename pri_queue::iterator_dispatcher iterator_dispatcher;
+
+    pri_queue q;
+    std::pair<long unsigned int, long unsigned int> regular;
+    std::pair<long unsigned int, long unsigned int> extra;
+
+#define CHECK(size_, index, xr,yr,xe,ye) {                              \
+        q.set(size_); extra.first = 1; extra.second = 0;                \
+        iterator_dispatcher dispatcher = iterator_dispatcher(q.size()-1); \
+        regular = dispatcher.get_child_nodes(&q, index, extra);         \
+        BOOST_REQUIRE(regular.first == xr);                             \
+        BOOST_REQUIRE(regular.second == yr);                            \
+        BOOST_REQUIRE((!(xe < ye) || (extra.first == xe && extra.second == ye)) \
+                      || (!(ye < xe) || extra.second < extra.first));   \
+    }
+
+    CHECK(1,0,1,0,1,0);
+    CHECK(2,0,1,1,1,0);
+    CHECK(3,0,1,2,1,0);
+    CHECK(4,0,3,3,2,2);
+    CHECK(5,0,3,4,2,2);
+    CHECK(6,0,3,5,1,0);
+    CHECK(7,0,3,6,1,0);
+
+    CHECK(8,3,7,7,1,0);
+    CHECK(9,3,7,8,1,0);
+    CHECK(10,3,7,8,1,0);
+    CHECK(10,4,9,9,1,0);
+
+    CHECK(13,5,11,12,1,0);
+
+#undef CHECK
+
+    run_min_max_heap_iterator_dispatcher_upward_test<2>();
+    run_min_max_heap_iterator_dispatcher_upward_test<3>();
+    run_min_max_heap_iterator_dispatcher_upward_test<4>();
+    run_min_max_heap_iterator_dispatcher_upward_test<5>();
+}
+
+template <int D, bool stable>
 void run_min_max_heap_test(void)
 {
     typedef boost::heap::min_max_heap<int,
@@ -255,24 +342,15 @@ void run_min_max_heap_test(void)
     BOOST_CONCEPT_ASSERT((boost::heap::PriorityQueue<pri_queue>));
 
     run_concept_check<pri_queue>();
-    //run_common_heap_tests<pri_queue>();
-    pri_queue_test_sequential_push<pri_queue>();
-    pri_queue_test_sequential_reverse_push<pri_queue>();
-    pri_queue_test_random_push<pri_queue>();
-    pri_queue_test_equality<pri_queue>();
-    pri_queue_test_inequality<pri_queue>();
-    pri_queue_test_less<pri_queue>();
-    pri_queue_test_clear<pri_queue>();
+    run_common_heap_tests<pri_queue>();
 
-    pri_queue_test_emplace<pri_queue>();
-    //
-    //run_iterator_heap_tests<pri_queue>();
-    //run_copyable_heap_tests<pri_queue>();
-    //run_moveable_heap_tests<pri_queue>();
-    //run_reserve_heap_tests<pri_queue>();
-    //run_merge_tests<pri_queue>();
+    run_iterator_heap_tests<pri_queue>();
+    run_copyable_heap_tests<pri_queue>();
+    run_moveable_heap_tests<pri_queue>();
+    run_reserve_heap_tests<pri_queue>();
+    run_merge_tests<pri_queue>();
 
-    //run_ordered_iterator_tests<pri_queue>();
+    run_ordered_iterator_tests<pri_queue>();
 #if 0
     if (stable) {
         typedef boost::heap::min_max_heap<q_tester, boost::heap::arity<D>,
@@ -292,7 +370,7 @@ void run_min_max_heap_test(void)
 BOOST_AUTO_TEST_CASE( min_max_heap_test )
 {
     run_min_max_heap_test<2, false>();
-    //run_min_max_heap_test<3, false>();
-    //run_min_max_heap_test<4, false>();
-    //run_min_max_heap_test<5, false>();
+    run_min_max_heap_test<3, false>();
+    run_min_max_heap_test<4, false>();
+    run_min_max_heap_test<5, false>();
 }

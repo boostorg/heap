@@ -30,14 +30,14 @@ void random_shuffle(RandomIt first, RandomIt last)
     for (difference_type i = n-1; i > 0; --i) {
         difference_type j = std::rand() % (i + 1);
         if (j != i) {
-		   using std::swap;  
+                   using std::swap;
            swap(first[i], first[j]);
         }
     }
 }
 
 #else
-	
+
 using std::random_shuffle;
 
 #endif

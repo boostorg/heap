@@ -32,24 +32,19 @@ namespace detail {
  * * static value_type const & get_value(internal_type const & arg) const; // get value_type from internal_type
  *
  * */
-template <typename ValueType,
-          typename InternalType,
+template <typename Derived,
+          typename ValueType,
           typename ContainerType,
           typename Alloc,
           typename ValueCompare,
           typename Dispatcher
-         >
-class ordered_adaptor_iterator:
-    public boost::iterator_facade<ordered_adaptor_iterator<ValueType,
-                                                           InternalType,
-                                                           ContainerType,
-                                                           Alloc,
-                                                           ValueCompare,
-                                                           Dispatcher>,
-                                  ValueType,
-                                  boost::forward_traversal_tag
-                                 >,
-    Dispatcher
+          >
+class ordered_adaptor_iterator_base :
+        public boost::iterator_facade<Derived,
+                                      ValueType,
+                                      boost::forward_traversal_tag
+                                      >,
+    public Dispatcher
 {
     friend class boost::iterator_core_access;
 
@@ -71,37 +66,38 @@ class ordered_adaptor_iterator:
         }
     };
 
+public:
     const ContainerType * container;
     size_t current_index; // current index: special value -1 denotes `end' iterator
 
 public:
-    ordered_adaptor_iterator(void):
+    ordered_adaptor_iterator_base(void):
         container(NULL), current_index((std::numeric_limits<size_t>::max)()),
         unvisited_nodes(compare_by_heap_value(NULL, ValueCompare()))
     {}
 
-    ordered_adaptor_iterator(const ContainerType * container, ValueCompare const & cmp):
+    ordered_adaptor_iterator_base(const ContainerType * container, ValueCompare const & cmp):
         container(container), current_index(container->size()),
         unvisited_nodes(compare_by_heap_value(container, ValueCompare()))
     {}
 
-    ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp):
+    ordered_adaptor_iterator_base(size_t initial_index, const ContainerType * container, ValueCompare const & cmp):
         container(container), current_index(initial_index),
         unvisited_nodes(compare_by_heap_value(container, cmp))
     {
-        discover_nodes(initial_index);
+        static_cast<Derived *>(this)->discover_nodes(initial_index);
     }
 
-    ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
+    ordered_adaptor_iterator_base(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
         Dispatcher(dispatcher),
         container(container), current_index(initial_index),
         unvisited_nodes(compare_by_heap_value(container, cmp))
     {
-        discover_nodes(initial_index);
+        static_cast<Derived *>(this)->discover_nodes(initial_index);
     }
 
-private:
-    bool equal (ordered_adaptor_iterator const & rhs) const
+public:
+    bool equal (ordered_adaptor_iterator_base const & rhs) const
     {
         if (current_index != rhs.current_index)
             return false;
@@ -119,7 +115,7 @@ private:
         else {
             current_index = unvisited_nodes.top();
             unvisited_nodes.pop();
-            discover_nodes(current_index);
+            static_cast<Derived *>(this)->discover_nodes(current_index);
         }
     }
 
@@ -127,17 +123,6 @@ private:
     {
         BOOST_ASSERT(current_index <= Dispatcher::max_index(container));
         return Dispatcher::get_value(Dispatcher::get_internal_value(container, current_index));
-    }
-
-    void discover_nodes(size_t index)
-    {
-        if (Dispatcher::is_leaf(container, index))
-            return;
-
-        std::pair<size_t, size_t> child_range = Dispatcher::get_child_nodes(container, index);
-
-        for (size_t i = child_range.first; i <= child_range.second; ++i)
-            unvisited_nodes.push(i);
     }
 
     std::priority_queue<size_t,
@@ -150,6 +135,139 @@ private:
                        > unvisited_nodes;
 };
 
+
+template <typename ValueType,
+          typename InternalType,
+          typename ContainerType,
+          typename Alloc,
+          typename ValueCompare,
+          typename Dispatcher
+         >
+class ordered_adaptor_iterator:
+        public ordered_adaptor_iterator_base<ordered_adaptor_iterator<ValueType,
+                                                                      InternalType,
+                                                                      ContainerType,
+                                                                      Alloc,
+                                                                      ValueCompare,
+                                                                      Dispatcher>,
+                                             ValueType,
+                                             ContainerType,
+                                             Alloc,
+                                             ValueCompare,
+                                             Dispatcher>
+{
+    typedef ordered_adaptor_iterator_base<ordered_adaptor_iterator<ValueType,
+                                                                   InternalType,
+                                                                   ContainerType,
+                                                                   Alloc,
+                                                                   ValueCompare,
+                                                                   Dispatcher>,
+                                          ValueType,
+                                          ContainerType,
+                                          Alloc,
+                                          ValueCompare,
+                                          Dispatcher>
+    base;
+
+    friend class boost::iterator_core_access;
+
+public:
+    ordered_adaptor_iterator(void)
+    {}
+
+    ordered_adaptor_iterator(const ContainerType * container, ValueCompare const & cmp):
+        base(container, cmp)
+    {}
+
+    ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp):
+        base(initial_index, container, cmp)
+    {}
+
+    ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
+        base(initial_index, container, cmp, dispatcher)
+    {}
+
+public:
+    void discover_nodes(size_t index)
+    {
+        if (Dispatcher::is_leaf(base::container, index))
+            return;
+
+        std::pair<size_t, size_t> child_range = Dispatcher::get_child_nodes(base::container, index);
+
+        for (size_t i = child_range.first; i <= child_range.second; ++i)
+            base::unvisited_nodes.push(i);
+    }
+};
+
+template <typename ValueType,
+          typename InternalType,
+          typename ContainerType,
+          typename Alloc,
+          typename ValueCompare,
+          typename Dispatcher
+         >
+class extended_ordered_adaptor_iterator:
+        public ordered_adaptor_iterator_base<extended_ordered_adaptor_iterator<ValueType,
+                                                                               InternalType,
+                                                                               ContainerType,
+                                                                               Alloc,
+                                                                               ValueCompare,
+                                                                               Dispatcher>,
+                                             ValueType,
+                                             ContainerType,
+                                             Alloc,
+                                             ValueCompare,
+                                             Dispatcher
+                                             >
+{
+    typedef ordered_adaptor_iterator_base<extended_ordered_adaptor_iterator<ValueType,
+                                                                            InternalType,
+                                                                            ContainerType,
+                                                                            Alloc,
+                                                                            ValueCompare,
+                                                                            Dispatcher>,
+                                          ValueType,
+                                          ContainerType,
+                                          Alloc,
+                                          ValueCompare,
+                                          Dispatcher
+                                          >
+    base;
+
+    friend class boost::iterator_core_access;
+
+public:
+    extended_ordered_adaptor_iterator(void)
+    {}
+
+    extended_ordered_adaptor_iterator(const ContainerType * container, ValueCompare const & cmp):
+        base(container, cmp)
+    {}
+
+    extended_ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp):
+        base(initial_index, container, cmp)
+    {}
+
+    extended_ordered_adaptor_iterator(size_t initial_index, const ContainerType * container, ValueCompare const & cmp, const Dispatcher & dispatcher):
+        base(initial_index, container, cmp, dispatcher)
+    {}
+
+    void discover_nodes(size_t index)
+    {
+        if (Dispatcher::is_leaf(base::container, index))
+            return;
+
+        std::pair<size_t, size_t> extra_child_range = std::make_pair(1, 0);
+        std::pair<size_t, size_t> child_range = Dispatcher::get_child_nodes(base::container, index, extra_child_range);
+
+        for (size_t i = extra_child_range.first; i <= extra_child_range.second; ++i)
+            base::unvisited_nodes.push(i);
+
+        for (size_t i = child_range.first; i <= child_range.second; ++i)
+            base::unvisited_nodes.push(i);
+    }
+};
 
 } /* namespace detail */
 } /* namespace heap */

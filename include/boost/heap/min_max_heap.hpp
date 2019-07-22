@@ -37,12 +37,11 @@
 
 #include <vector>
 #include <cstring> // memset
-#include <iostream> //TODO remove
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/policies.hpp>
-
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/ilog2.hpp>
 #include <boost/heap/detail/mutable_heap.hpp>
@@ -65,10 +64,10 @@ namespace boost  {
 namespace heap   {
 namespace detail {
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct tree_depth;
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct min_max_ordered_iterator_status;
 
 typedef parameter::parameters<boost::parameter::optional<tag::arity>,
@@ -176,7 +175,7 @@ public:
         return super_t::value_comp();
     }
 
-    template<bool Regular>
+    template <bool Regular>
     bool compare(size_type i, size_type j) const
     {
         BOOST_ASSERT(i < this->size());
@@ -235,11 +234,6 @@ public:
         return 0;
     }
 
-    std::pair<size_type, size_type> get_child_nodes(size_type index) const
-    {
-        return std::make_pair(first_child(index), last_child(index));
-    }
-
     size_type first_child(size_type index) const
     {
         return D * index + 1;
@@ -250,19 +244,26 @@ public:
         return D * (index + 1);
     }
 
-    std::pair<size_type, size_type> get_grandchild_nodes(size_type index) const
+    std::pair<size_type, size_type> children(size_type index) const
     {
-        return std::make_pair(first_grandchild(index), last_grandchild(index));
+        size_type child = first_child(index);
+        return std::make_pair(child, child + D - 1);
     }
 
     size_type first_grandchild(size_type index) const
     {
-        return first_child(first_child(index));
+        return D * D * index + D + 1;
     }
 
     size_type last_grandchild(size_type index) const
     {
-        return last_child(last_child(index));
+        return D * D * index + D * (D + 1);
+    }
+
+    std::pair<size_type, size_type> grandchildren(size_type index) const
+    {
+        size_type grandchild = first_grandchild(index);
+        return std::make_pair(grandchild, grandchild + D * D - 1);
     }
 
     size_type last(void) const
@@ -298,7 +299,7 @@ public:
         return parent(parent(index));
     }
 
-    template<bool Regular>
+    template <bool Regular>
     bool best_between(size_type & best, size_type current, size_type theorical_last) const
     {
         bool found = false;
@@ -312,21 +313,19 @@ public:
         return found;
     }
 
-    template<bool Regular>
+    template <bool Regular>
     size_type best_child_or_grandchild(size_type index, bool & is_grandchild) const
     {
-        const size_type first_child = this->first_child(index);
+        const std::pair<size_type, size_type> children = this->children(index);
 
-        if(last() < first_child) return npos();
+        if(last() < children.first) return npos();
 
-        const size_type last_child = this->last_child(index);
-        const size_type first_grandchild = this->first_child(first_child);
-        const size_type last_grandchild = this->last_child(last_child);
+        const std::pair<size_type, size_type> grandchildren = this->grandchildren(index);
 
-        size_type best_child = first_child;
+        size_type best_child = children.first;
 
-        best_between<Regular>(best_child, first_child + 1, last_child);
-        is_grandchild = best_between<Regular>(best_child, first_grandchild, last_grandchild);
+        best_between<Regular>(best_child, children.first + 1, children.second);
+        is_grandchild = best_between<Regular>(best_child, grandchildren.first, grandchildren.second);
 
         return best_child;
     }
@@ -341,7 +340,7 @@ public:
             trickle_down_impl<false>(index);
     }
 
-    template<bool Regular>
+    template <bool Regular>
     void trickle_down_impl(size_type i)
     {
         bool is_grandchild;
@@ -374,7 +373,7 @@ public:
             bubble_up_impl<false>(i);
     }
 
-    template<bool Regular>
+    template <bool Regular>
     void bubble_up_impl(size_type i)
     {
         size_type parent = this->parent(i);
@@ -389,7 +388,7 @@ public:
         }
     }
 
-    template<bool Regular>
+    template <bool Regular>
     void bubble_up_impl_(size_type i)
     {
         size_type grandparent = this->grandparent(i);
@@ -580,11 +579,10 @@ public:
     }
 
 public:
-    template<class Order>
     struct iterator_dispatcher
     {
-        iterator_dispatcher(size_type max = 0) :
-            status(max)
+        iterator_dispatcher(size_type max_index = 0) :
+            status(max_index)
         {}
 
         min_max_ordered_iterator_status<D, size_type> status;
@@ -594,13 +592,96 @@ public:
             return heap->last();
         }
 
-        bool is_leaf(const min_max_heap * heap, size_type index) const
+        static bool is_leaf(const min_max_heap * heap, size_type index)
         {
-            return false;
+            return (heap->root() < index && index <= D) || index == heap->last() + 1;
         }
 
-        std::pair<size_type, size_type> get_child_nodes(const min_max_heap * heap, size_type index)
+        std::pair<size_type, size_type> get_child_nodes(const min_max_heap * heap, size_type index, std::pair<size_type, size_type> & extra_child_nodes)
         {
+            /* As stated in the article, the Hasse diagram is divided in two parts.
+             * The first one consists of even levels and can be explored like a
+             * regular binary tree except that the number of children of a node
+             * is D^2 instead of D because odd levels are skipped.
+             * The second part consists of odd levels and is a bit more complicated
+             * to explore. The search has to go back up in the tree from the leaves
+             * but since a node on an odd level is being pointed to by D^2 grandchildren
+             * it cannot be visited until all of its heirs have been visited.
+             *
+             * The 'min_max_ordered_iterator_status' structure is used to keep track
+             * of this. It indicates for each node on an odd level whether its heirs
+             * have been visited. When the last heir is being visited, it adds the
+             * node to the potential candidates to be visited next. Furthermore, when
+             * this happens, the markers for its heirs are reset and will then be
+             * reused to indicate to its own grandfather that it has been visited while
+             * its siblings may not have yet been visited.
+             *
+             * This method requires $O(log_D((D - 1) * (size() - 1) + 1))$ bytes.
+             *
+             * The following specific cases must be addressed (D = 3):
+             *         0        1) when 0 is visited, it must add nodes 4-8 to the list
+             *        /|\          of potential candidates to be visited next, as well
+             *       / | \         as node 3. This explains the 'extra_child_nodes' as
+             *      /  |  \        node denoted 4-8 and 3 might not be consecutive in a
+             *     /   |   \       larger tree where the example would be a subtree.
+             *    /    |    \   2) when 8 is visited, it must set its indicator and
+             *   1     2     3     set the indicator for the non existing node 9 (in
+             *  /|\   /|           general for all its right siblings) and then add 2
+             * 4 5 6 7 8           if 7 has already been visited.
+            */
+            const size_type last = heap->last();
+            const bool on_compare_level = heap->is_on_compare_level(index);
+
+            if (on_compare_level) {
+                std::pair<size_type, size_type> children = heap->children(index);
+
+                if (children.first <= last) {
+                    std::pair<size_type, size_type> grandchildren = heap->grandchildren(index);
+
+                    if (grandchildren.first <= last) {
+                        if (last < grandchildren.second) {
+                            grandchildren.second = last;
+
+                            extra_child_nodes.first = heap->parent(grandchildren.second) + 1;
+                            extra_child_nodes.second = children.second;
+                        }
+
+                        return grandchildren;
+                    }
+
+                    children.second = std::min(children.second, last);
+
+                    return children;
+                }
+            }// else is leaf or not on compare level
+
+            status.set(index);
+            size_type parent = heap->parent(index);
+
+            if (BOOST_LIKELY(parent != heap->npos())) {
+                size_type rightmost_sibling = heap->last_child(parent);
+
+                // if (last < rightmost_sibling)
+                for(size_type i = last + 1; i <= rightmost_sibling; ++i)
+                    status.set(i);
+
+                if (on_compare_level) {
+                    if(status.is_complete(parent)) {
+                        status.reset(parent);
+                        return std::make_pair(parent, parent);
+                    }
+                }
+                else {
+                    size_type grandparent = heap->parent(parent);
+
+                    if (BOOST_LIKELY(grandparent != heap->npos())
+                        && status.is_complete(grandparent)) {
+                        status.reset(grandparent);
+                        return std::make_pair(grandparent, grandparent);
+                    }
+                }
+            }
+
             return std::make_pair(1, 0);
         }
 
@@ -616,35 +697,35 @@ public:
     };
 
 public:
-    struct ordered_iterator_dispatcher : iterator_dispatcher<ordered_iterator_dispatcher>
+    struct ordered_iterator_dispatcher : iterator_dispatcher
     {
         ordered_iterator_dispatcher(size_type max):
-            iterator_dispatcher<ordered_iterator_dispatcher>(max)
+            iterator_dispatcher(max)
         {}
     };
 
 public:
-    typedef detail::ordered_adaptor_iterator<const value_type,
-                                             internal_type,
-                                             min_max_heap,
-                                             allocator_type,
-                                             typename super_t::internal_compare,
-                                             ordered_iterator_dispatcher>
+    typedef detail::extended_ordered_adaptor_iterator<const value_type,
+                                                      internal_type,
+                                                      min_max_heap,
+                                                      allocator_type,
+                                                      typename super_t::internal_compare,
+                                                      ordered_iterator_dispatcher>
     ordered_iterator;
 
 public:
     ordered_iterator ordered_begin(void) const
     {
-        return ordered_iterator(root(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(this->last()));
+        return ordered_iterator(root(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(size()));
     }
 
     ordered_iterator ordered_end(void) const
     {
-        return ordered_iterator(q_.size(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(this->last()));
+        return ordered_iterator(size(), this, super_t::get_internal_cmp(), ordered_iterator_dispatcher(root()));
     }
 
 public:
-    struct reverse_ordered_iterator_dispatcher : iterator_dispatcher<reverse_ordered_iterator_dispatcher>
+    struct reverse_ordered_iterator_dispatcher : iterator_dispatcher
     {
 
     };
@@ -662,12 +743,12 @@ public:
         }
       };
 
-    typedef detail::ordered_adaptor_iterator<const value_type,
-                                             internal_type,
-                                             min_max_heap,
-                                             allocator_type,
-                                             reverse_internal_compare,
-                                             reverse_ordered_iterator_dispatcher>
+    typedef detail::extended_ordered_adaptor_iterator<const value_type,
+                                                      internal_type,
+                                                      min_max_heap,
+                                                      allocator_type,
+                                                      reverse_internal_compare,
+                                                      reverse_ordered_iterator_dispatcher>
     reverse_ordered_iterator;
 
 public:
@@ -683,7 +764,7 @@ public:
     /* iterators */
 };
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct tree_depth
 {
     IntType operator () (IntType index) const
@@ -701,18 +782,18 @@ struct tree_depth
         return depth;
     }
 
-    /* Alternatively, let f be a function mapping an index n to its
-       corresponding depth (or row) r in a D tree, f_D(n)=r and 1 < D
-       If n is on row r, then $\sum_{i=0}^{r} D^{i} <= n < \sum_{i=0}^{r+1} D^{i}$
-       hence $D^{r+1} <= (D-1) * n + 1 < D^{r+2}$ then
-       $r + 1 <= \frac{log_2((D-1) * n + 1)}{log_2(D)} < r+2$
-       since log_2 is strictly increasing and because an array index starts at 0 (r:=r-1)
-       $r = log_2((Base - 1) * index + 1) / log_2(Base)$
-       which is slower than the above iterative method for indexes up to 10^10.
-    */
+    /* Alternatively, let f be a function mapping an index n to its corresponding
+     * depth (or row) r in a D tree, f_D(n)=r and 1 < D. If n is on row r, then
+     * $\sum_{i=0}^{r} D^{i} <= n < \sum_{i=0}^{r+1} D^{i}$, hence
+     * $D^{r+1} <= (D-1) * n + 1 < D^{r+2}$ and since log_D is strictly increasing
+     * $r + 1 <= log_D((D-1) * n + 1) < r + 2$ and then
+     * because an array index is an integer starting at 0 (r:=r-1);
+     * $r = log_D((D - 1) * index + 1)$
+     * which is slower than the above iterative method for indexes up to 10^10.
+     */
 };
 
-template<typename IntType>
+template <typename IntType>
 struct tree_depth<2, IntType>
 {
     IntType operator () (IntType index) const
@@ -721,7 +802,7 @@ struct tree_depth<2, IntType>
     }
 };
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct ipower
 {
     ipower(IntType max)
@@ -749,7 +830,7 @@ struct ipower
     }
 };
 
-template<typename IntType>
+template <typename IntType>
 struct ipower<2, IntType>
 {
     ipower(IntType) {}
@@ -765,14 +846,15 @@ struct ipower<2, IntType>
     }
 };
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct min_max_ordered_iterator_status_base
 {
     min_max_ordered_iterator_status_base(IntType max_index = 0) :
         max_depth(boost::heap::detail::tree_depth<Base, IntType>()(max_index)),
-        power(max_depth),
-        candidates(std::max(ipower<Base, IntType>::pow(max_depth) / 8, (IntType)1), 0)
-    {}
+        power(max_depth)
+    {
+      candidates.resize(1 + (power.pow(max_depth) + 1) / 8, 0);
+    }
 
     const IntType max_depth;
     const ipower<Base, IntType> power;
@@ -807,7 +889,7 @@ struct min_max_ordered_iterator_status_base
     }
 };
 
-template<unsigned int Base, typename IntType>
+template <unsigned int Base, typename IntType>
 struct min_max_ordered_iterator_status : min_max_ordered_iterator_status_base<Base, IntType>
 {
     typedef min_max_ordered_iterator_status_base<Base, IntType> base;
@@ -865,7 +947,8 @@ struct min_max_ordered_iterator_status : min_max_ordered_iterator_status_base<Ba
 
         const IntType first_heirs = std::min(heirs, 8 - offset);
         if (first_heirs < 8) {
-            if(!(base::candidates[chunk] & ((0xFF >> (offset + (8 - offset - first_heirs))) << (8 - offset - first_heirs)))) return false;
+            IntType mask = (0xFF >> (offset + (8 - offset - first_heirs))) << (8 - offset - first_heirs);
+            if((base::candidates[chunk] & mask) != mask) return false;
             ++chunk;
             heirs -= first_heirs;
         }
@@ -877,11 +960,12 @@ struct min_max_ordered_iterator_status : min_max_ordered_iterator_status_base<Ba
             heirs -= 8;
         }
 
-        return (heirs && base::candidates[chunk] & (0xFF << (8 - heirs))) || !heirs;
+        uint8_t mask = 0xFF << (8 - heirs);
+        return (heirs && (base::candidates[chunk] & mask) == mask) || !heirs;
     }
 };
 
-template<typename IntType>
+template <typename IntType>
 struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_status_base<2, IntType>
 {
     typedef min_max_ordered_iterator_status_base<2, IntType> base;
@@ -926,11 +1010,11 @@ struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_st
         }
         //disjoint heirs
         const uint8_t mask = masks[heirs] << (8 - heirs - offset);
-        return (mask && base::candidates[chunk] & mask) || !mask;
+        return (mask && (base::candidates[chunk] & mask) == mask) || !mask;
     }
 };
 
-template<typename T, typename BoundArgs>
+template <typename T, typename BoundArgs>
 struct select_minmax_heap
 {
     static const bool is_mutable = extract_mutable<BoundArgs>::value;
@@ -964,19 +1048,19 @@ struct select_minmax_heap
 #ifdef BOOST_DOXYGEN_INVOKED
 template<class T, class ...Options>
 #else
-template<typename T,
-         class A0 = boost::parameter::void_,
-         class A1 = boost::parameter::void_,
-         class A2 = boost::parameter::void_,
-         class A3 = boost::parameter::void_,
-         class A4 = boost::parameter::void_,
-         class A5 = boost::parameter::void_
-         >
+template <typename T,
+          class A0 = boost::parameter::void_,
+          class A1 = boost::parameter::void_,
+          class A2 = boost::parameter::void_,
+          class A3 = boost::parameter::void_,
+          class A4 = boost::parameter::void_,
+          class A5 = boost::parameter::void_
+          >
 #endif
 class min_max_heap:
     public detail::select_minmax_heap<T, typename detail::min_max_heap_signature::bind<A0, A1, A2, A3, A4, A5>::type>::type
 {
-typedef typename detail::min_max_heap_signature::bind<A0, A1, A2, A3, A4, A5>::type bound_args;
+    typedef typename detail::min_max_heap_signature::bind<A0, A1, A2, A3, A4, A5>::type bound_args;
     typedef typename detail::select_minmax_heap<T, bound_args>::type super_t;
 
     template <typename Heap1, typename Heap2>
