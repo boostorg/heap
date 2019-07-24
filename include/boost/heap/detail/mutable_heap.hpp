@@ -628,17 +628,17 @@ public:
     void pop_min(void)
     {
         BOOST_ASSERT(!super_t::empty());
-        typename super_t::list_iterator q_top = super_t::q_.min();
+        typename super_t::list_iterator q_min = super_t::q_.min();
         super_t::q_.pop_min();
-        super_t::objects.erase(q_top);
+        super_t::objects.erase(q_min);
     }
 
     void pop_max(void)
     {
         BOOST_ASSERT(!super_t::empty());
-        typename super_t::list_iterator q_top = super_t::q_.max();
+        typename super_t::list_iterator q_max = super_t::q_.max();
         super_t::q_.pop_max();
-        super_t::objects.erase(q_top);
+        super_t::objects.erase(q_max);
     }
 
 public:
@@ -739,7 +739,7 @@ public:
     ordered_iterator ordered_begin(void) const
     {
         if (!super_t::empty())
-            return ordered_iterator(super_t::q_.min(), this, typename super_t::indirect_cmp(super_t::q_.value_comp()), typename super_t::q_type::ordered_iterator_dispatcher(super_t::q_.size()));
+            return ordered_iterator(super_t::q_.max(), this, typename super_t::indirect_cmp(super_t::q_.value_comp()), typename super_t::q_type::ordered_iterator_dispatcher(super_t::q_.size()));
         else
             return ordered_end();
     }
@@ -796,7 +796,7 @@ public:
     {
         if (!super_t::empty()) {
             if (1 < super_t::size()) {
-                typename super_t::const_list_iterator it = super_t::q_.max();
+                const typename super_t::const_list_iterator it = super_t::q_.min();
                 std::pair<typename super_t::size_type, typename super_t::size_type> initial_indexes;
                 initial_indexes.first = 1;
                 initial_indexes.second = std::min<typename super_t::size_type>(PriorityQueueType::D, super_t::size());
@@ -804,7 +804,7 @@ public:
                 return reverse_ordered_iterator(it, initial_indexes, this, indirect_reverse_cmp(super_t::q_.value_comp()), typename super_t::q_type::reverse_ordered_iterator_dispatcher(super_t::q_.size()));
             }
             else
-                return reverse_ordered_iterator(super_t::q_.max(), this, indirect_reverse_cmp(super_t::q_.value_comp()), typename super_t::q_type::reverse_ordered_iterator_dispatcher(super_t::q_.size()));
+                return reverse_ordered_iterator(super_t::q_.min(), this, indirect_reverse_cmp(super_t::q_.value_comp()), typename super_t::q_type::reverse_ordered_iterator_dispatcher(super_t::q_.size()));
         }
         else
             return reverse_ordered_end();

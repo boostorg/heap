@@ -180,9 +180,8 @@ public:
     {
         BOOST_ASSERT(i < this->size());
         BOOST_ASSERT(j < this->size());
-        // use > or std::greater for min-max heap
-        // use < or std::less for a max-min heap
-        if (!Regular)
+        
+        if (Regular)
             return super_t::operator () (q_[i], q_[j]);
         else
             return super_t::operator () (q_[j], q_[i]);
@@ -246,7 +245,7 @@ public:
 
     std::pair<size_type, size_type> children(size_type index) const
     {
-        size_type child = first_child(index);
+        const size_type child = first_child(index);
         return std::make_pair(child, child + D - 1);
     }
 
@@ -262,7 +261,7 @@ public:
 
     std::pair<size_type, size_type> grandchildren(size_type index) const
     {
-        size_type grandchild = first_grandchild(index);
+        const size_type grandchild = first_grandchild(index);
         return std::make_pair(grandchild, grandchild + D * D - 1);
     }
 
@@ -335,23 +334,23 @@ public:
     void trickle_down(size_type i)
     {
         if (is_on_compare_level(i))
-            trickle_down_impl<true>(i);
-        else
             trickle_down_impl<false>(i);
+        else
+            trickle_down_impl<true>(i);
     }
 
     template <bool Regular>
     void trickle_down_impl(size_type i)
     {
         bool is_grandchild;
-        size_type m = best_child_or_grandchild<Regular>(i, is_grandchild);
+        const size_type m = best_child_or_grandchild<Regular>(i, is_grandchild);
 
         if (m < npos()) {
             if (is_grandchild) {
                 if (compare<Regular>(m, i)) {
                     swap(i, m);
 
-                    size_type parent = this->parent(m);
+                    const size_type parent = this->parent(m);
 
                     if (compare<Regular>(parent, m))
                         swap(m, parent);
@@ -360,22 +359,22 @@ public:
                 }
             }
             else if (compare<Regular>(m, i))
-		swap(i, m);
+                swap(i, m);
         }
     }
 
     void bubble_up(size_type i)
     {
         if (is_on_compare_level(i))
-            bubble_up_impl<true>(i);
-        else
             bubble_up_impl<false>(i);
+        else
+            bubble_up_impl<true>(i);
     }
 
     template <bool Regular>
     void bubble_up_impl(size_type i)
     {
-        size_type parent = this->parent(i);
+        const size_type parent = this->parent(i);
 
         if (parent != npos()) {
             if (compare<Regular>(parent, i)) {
@@ -390,7 +389,7 @@ public:
     template <bool Regular>
     void bubble_up_impl_(size_type i)
     {
-        size_type grandparent = this->grandparent(i);
+        const size_type grandparent = this->grandparent(i);
 
         if (grandparent != npos() && compare<Regular>(i, grandparent)) {
             swap(i, grandparent);
@@ -412,16 +411,16 @@ public:
     }
 
 protected:
-    size_type index_of_min(void) const
+    size_type index_of_max(void) const
     {
         return root();
     }
 
-    size_type index_of_max(void) const
+    size_type index_of_min(void) const
     {
         size_type best = root();
 
-        best_between<false>(best, 1, D);
+        best_between<true>(best, 1, D);
 
         return best;
     }
@@ -432,7 +431,7 @@ protected:
     {
         q_.push_back(super_t::make_node(v));
 
-        size_type index = last();
+        const size_type index = last();
         reset_index(index, index);
 
         bubble_up(index);
@@ -450,7 +449,7 @@ protected:
 
     value_type const & top(void) const
     {
-        return min();
+        return max();
     }
     
     value_type const & min(void) const
@@ -469,7 +468,7 @@ protected:
 
     void pop(void)
     {
-        pop_min();
+        pop_max();
     }       
 
     void pop_min(void)
@@ -508,7 +507,7 @@ public:
 
         size_type parent = this->parent(index);
         
-        if (compare(parent, index))
+        if (compare(index, parent))
           decrease(index);
         else
           increase(index);
@@ -590,7 +589,7 @@ public:
              * to explore. The search has to go back up in the tree from the leaves
              * but since a node on an odd level is being pointed to by D^2 grandchildren
              * in the Hasse diagram, it cannot be visited until all of its heirs have
-	     * previously been visited.
+             * previously been visited.
              *
              * The 'min_max_ordered_iterator_status' structure is used to keep track
              * of this. It indicates for each node on an odd level whether its heirs
@@ -640,10 +639,10 @@ public:
             }// else is leaf or not on compare level
 
             status.set(index);
-            size_type parent = heap->parent(index);
+            const size_type parent = heap->parent(index);
 
             if (BOOST_LIKELY(parent != heap->npos())) {
-                size_type rightmost_sibling = heap->last_child(parent);
+                const size_type rightmost_sibling = heap->last_child(parent);
 
                 // if (last < rightmost_sibling)
                 for(size_type i = last + 1; i <= rightmost_sibling; ++i)
@@ -656,7 +655,7 @@ public:
                     }
                 }
                 else {
-                    size_type grandparent = heap->parent(parent);
+                    const size_type grandparent = heap->parent(parent);
 
                     if (BOOST_LIKELY(grandparent != heap->npos())
                         && status.is_complete(grandparent)) {
@@ -738,7 +737,8 @@ public:
             return super_t::internal_compare::operator () (rhs, lhs);
         }
       };
-
+    
+public:
     typedef detail::extended_ordered_adaptor_iterator<const value_type,
                                                       internal_type,
                                                       min_max_heap,
@@ -750,18 +750,18 @@ public:
 public:
     reverse_ordered_iterator reverse_ordered_begin(void) const
     {
-        size_type max_index = root();
+        size_type index_of_min = root();
         std::pair<size_type, size_type> initial_indexes = std::make_pair(1, 0);
 
         if (1 < size()) {
-            max_index = index_of_max();
-            // The initial_indexes range will contain max_index and this is fine
+            index_of_min = this->index_of_min();
+            // The initial_indexes range will contain index_of_min and this is fine
             // as long as the adaptor is storing upcoming indexes in a set.
             initial_indexes.first = 1;
             initial_indexes.second = std::min<size_type>(D, last());
         }
 
-        return reverse_ordered_iterator(max_index, initial_indexes, this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(size()));
+        return reverse_ordered_iterator(index_of_min, initial_indexes, this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(size()));
     }
 
     reverse_ordered_iterator reverse_ordered_end(void) const
@@ -1038,7 +1038,7 @@ struct select_minmax_heap
  * \class min_max_heap
  * \brief min-max heap class
  *
- * This class implements an double-ended priority queue. Internally, the min-max heap is represented
+ * This class implements a double-ended priority queue. Internally, the min-max heap is represented
  * as a dynamically sized array (std::vector), that directly stores the values.
  *
  * The template parameter T is the type to be managed by the container.
@@ -1189,9 +1189,20 @@ public:
     /// \copydoc boost::heap::priority_queue::top
     value_type const & top(void) const
     {
-        return super_t::min();
+        return super_t::max();
     }
 
+    /**
+     * \b Effects: Returns a const_reference to the max element.
+     *
+     * \b Complexity: Constant.
+     *
+     * */
+    value_type const & max(void) const
+    {
+      return super_t::max();
+    }
+    
     /**
      * \b Effects: Returns a const_reference to the min element.
      *
@@ -1209,19 +1220,40 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    value_type const & max(void) const
+    value_type const & best(void) const
     {
       return super_t::max();
     }
 
-    /// \copydoc boost::heap::priority_queue::push
+    /**
+     * \b Effects: Returns a const_reference to the min element.
+     *
+     * \b Complexity: Constant.
+     *
+     * */
+    value_type const & worst(void) const
+    {
+      return super_t::min();
+    }
+    
+    /**
+     * \b Effects: Adds a new element to the priority queue. Returns handle to element
+     *
+     * \b Complexity: Logarithmic.
+     *
+     * */
     typename boost::conditional<is_mutable, handle_type, void>::type push(value_type const & v)
     {
         return super_t::push(v);
     }
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    /// \copydoc boost::heap::priority_queue::emplace
+    /**
+     * \b Effects: Adds a new element to the priority queue. The element is directly constructed in-place. Returns handle to element.
+     *
+     * \b Complexity: Logarithmic.
+     *
+     * */
     template <class... Args>
     typename boost::conditional<is_mutable, handle_type, void>::type emplace(Args&&... args)
     {
@@ -1385,10 +1417,15 @@ public:
         return super_t::s_handle_from_iterator(it);
     }
 
-    /// \copydoc boost::heap::priority_queue::pop
+    /**
+     * \b Effects: Removes the top element from the priority queue.
+     *
+     * \b Complexity: Logarithmic.
+     *
+     * */
     void pop(void)
     {
-        super_t::pop_min();
+        super_t::pop_max();
     }
 
     /**
@@ -1396,22 +1433,21 @@ public:
      *
      * \b Complexity: Logarithmic.
      *
-     * \b Note: Same as pop
      * */
-    void pop_min(void)
+    void pop_max(void)
     {
-      super_t::pop_min();
+      super_t::pop_max();
     }
-
+    
     /**
      * \b Effects: Removes the element with the lowest priority from the priority queue.
      *
      * \b Complexity: Logarithmic.
      *
      * */
-    void pop_max(void)
+    void pop_min(void)
     {
-      super_t::pop_max();
+      super_t::pop_min();
     }
 
     /// \copydoc boost::heap::priority_queue::swap
@@ -1444,7 +1480,13 @@ public:
         return super_t::end();
     }
 
-    /// \copydoc boost::heap::fibonacci_heap::ordered_begin
+    /**
+     * \b Effects: Returns an ordered iterator to the first element contained in the priority queue.
+     *
+     * \b Spatial complexity: Requires an additional ((D - 1) * (size() - 1) + 1/(8*D) bytes.
+     *
+     * \b Note: Ordered iterators traverse the priority queue in heap order.
+     * */
     ordered_iterator ordered_begin(void) const
     {
         return super_t::ordered_begin();
@@ -1458,6 +1500,8 @@ public:
 
     /**
      * \b Effects: Returns a reverse ordered iterator to the last element contained in the priority queue.
+     *
+     * \b Spatial complexity: Requires an additional ((D - 1) * (size() - 1) + 1/(8*D) bytes.
      *
      * \b Note: Reverse ordered iterators traverse the priority queue in heap reverse order.
      * */
