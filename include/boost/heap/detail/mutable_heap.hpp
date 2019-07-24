@@ -226,7 +226,7 @@ public:
     typedef typename object_list::difference_type difference_type;
 
     template <typename Derived, typename Dispatcher, typename IndirectCmp, typename Wrapper>
-    class ordered_iterator_base:
+    class ordered_iterator_facade:
         public boost::iterator_adaptor<Derived,
                                        const_list_iterator,
                                        value_type const,
@@ -247,34 +247,34 @@ public:
         friend class boost::iterator_core_access;
 
     public:
-        ordered_iterator_base(void):
+        ordered_iterator_facade(void):
             adaptor_type(0), unvisited_nodes(IndirectCmp()), q_(NULL)
         {}
 
-        ordered_iterator_base(const Wrapper * q, IndirectCmp const & cmp):
+        ordered_iterator_facade(const Wrapper * q, IndirectCmp const & cmp):
             adaptor_type(0), unvisited_nodes(cmp), q_(q)
         {}
 
-        ordered_iterator_base(const_list_iterator it, const Wrapper * q, IndirectCmp const & cmp):
+        ordered_iterator_facade(const_list_iterator it, const Wrapper * q, IndirectCmp const & cmp):
             adaptor_type(it), unvisited_nodes(cmp), q_(q)
         {
             if (it != q->objects.end())
                 static_cast<Derived *>(this)->discover_nodes(it);
         }
 
-        ordered_iterator_base(const_list_iterator it, const Wrapper * q, IndirectCmp const & cmp, Dispatcher const & dispatcher):
+        ordered_iterator_facade(const_list_iterator it, const Wrapper * q, IndirectCmp const & cmp, Dispatcher const & dispatcher):
             adaptor_type(it), Dispatcher(dispatcher), unvisited_nodes(cmp), q_(q)
         {
             if (it != q->objects.end())
                 static_cast<Derived *>(this)->discover_nodes(it);
         }
 
-        bool operator!=(ordered_iterator_base const & rhs) const
+        bool operator!=(ordered_iterator_facade const & rhs) const
         {
             return adaptor_type::base() != rhs.base();
         }
 
-        bool operator==(ordered_iterator_base const & rhs) const
+        bool operator==(ordered_iterator_facade const & rhs) const
         {
             return !operator!=(rhs);
         }
@@ -308,46 +308,46 @@ public:
         const Wrapper * q_;
     };
 
-    class ordered_iterator : public ordered_iterator_base<ordered_iterator,
-                                                          typename q_type::ordered_iterator_dispatcher,
-                                                          indirect_cmp,
-                                                          priority_queue_mutable_wrapper
-                                                          >
+    class ordered_iterator : public ordered_iterator_facade<ordered_iterator,
+                                                            typename q_type::ordered_iterator_dispatcher,
+                                                            indirect_cmp,
+                                                            priority_queue_mutable_wrapper
+                                                            >
     {
-        typedef ordered_iterator_base<ordered_iterator,
-                                      typename q_type::ordered_iterator_dispatcher,
-                                      indirect_cmp,
-                                      priority_queue_mutable_wrapper
-                                      > super_t;
+        typedef ordered_iterator_facade<ordered_iterator,
+                                        typename q_type::ordered_iterator_dispatcher,
+                                        indirect_cmp,
+                                        priority_queue_mutable_wrapper
+                                        > facade;
         
     public:
         ordered_iterator(void):
-            super_t()
+            facade()
         {}
 
         ordered_iterator(const priority_queue_mutable_wrapper * q, indirect_cmp const & cmp):
-            super_t(q, cmp)
+            facade(q, cmp)
         {}
 
         ordered_iterator(const_list_iterator it, const priority_queue_mutable_wrapper * q, indirect_cmp const & cmp):
-            super_t(it, q, cmp)
+            facade(it, q, cmp)
         {}
 
-        void discover_nodes(typename super_t::iterator current)
+        void discover_nodes(typename facade::iterator current)
         {
             size_type current_index = current->second;
-            const q_type * q = &(super_t::q_->q_);
+            const q_type * q = &(facade::q_->q_);
 
-            if (super_t::iterator_dispatcher::is_leaf(q, current_index))
+            if (facade::iterator_dispatcher::is_leaf(q, current_index))
                 return;
 
-            std::pair<size_type, size_type> child_range = super_t::iterator_dispatcher::get_child_nodes(q, current_index);
+            std::pair<size_type, size_type> child_range = facade::iterator_dispatcher::get_child_nodes(q, current_index);
 
             for (size_type i = child_range.first; i <= child_range.second; ++i) {
-                typename q_type::internal_type const & internal_value_at_index = super_t::iterator_dispatcher::get_internal_value(q, i);
-                typename q_type::value_type const & value_at_index = super_t::q_->q_.get_value(internal_value_at_index);
+                typename q_type::internal_type const & internal_value_at_index = facade::iterator_dispatcher::get_internal_value(q, i);
+                typename q_type::value_type const & value_at_index = facade::q_->q_.get_value(internal_value_at_index);
 
-                super_t::unvisited_nodes.push(value_at_index);
+                facade::unvisited_nodes.push(value_at_index);
             }
         }
     };
@@ -646,93 +646,85 @@ public:
               typename Dispatcher,
               typename IndirectCmp
               >
-    class ordered_iterator_base :
-        public super_t::template ordered_iterator_base<Derived,
-                                                       Dispatcher,
-                                                       IndirectCmp,
-                                                       double_ended_priority_queue_mutable_wrapper
-                                                       >
+    class ordered_iterator_facade :
+        public super_t::template ordered_iterator_facade<Derived,
+                                                         Dispatcher,
+                                                         IndirectCmp,
+                                                         double_ended_priority_queue_mutable_wrapper
+                                                         >
     {
-        typedef typename super_t::template ordered_iterator_base<Derived,
-                                                                 Dispatcher,
-                                                                 IndirectCmp,
-                                                                 double_ended_priority_queue_mutable_wrapper
-                                                                 > iterator_super_t;
+        typedef typename super_t::template ordered_iterator_facade<Derived,
+                                                                   Dispatcher,
+                                                                   IndirectCmp,
+                                                                   double_ended_priority_queue_mutable_wrapper
+                                                                   > facade;
         
     public:
-        ordered_iterator_base(void):
-            iterator_super_t()
+        ordered_iterator_facade(void):
+            facade()
         {}
 
-        ordered_iterator_base(const double_ended_priority_queue_mutable_wrapper * q, IndirectCmp const & cmp):
-            iterator_super_t(q, cmp)
-        {}
-
-        ordered_iterator_base(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp):
-            iterator_super_t(it, q, cmp)
-        {}
-
-        ordered_iterator_base(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename iterator_super_t::iterator_dispatcher const & dispatcher):
-            iterator_super_t(it, q, cmp, dispatcher)
+        ordered_iterator_facade(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename facade::iterator_dispatcher const & dispatcher):
+            facade(it, q, cmp, dispatcher)
         {}
         
-        void discover_nodes(typename iterator_super_t::iterator current)
+        void discover_nodes(typename facade::iterator current)
         {
             typedef typename super_t::size_type size_type;
             typedef typename super_t::q_type q_type;
             
             size_type current_index = current->second;
-            const q_type * q = &(iterator_super_t::q_->q_);
+            const q_type * q = &(facade::q_->q_);
 
-            if (iterator_super_t::iterator_dispatcher::is_leaf(q, current_index))
+            if (facade::iterator_dispatcher::is_leaf(q, current_index))
                 return;
 
             std::pair<size_type, size_type> extra_child_range = std::make_pair(1, 0);
-            std::pair<size_type, size_type> child_range = iterator_super_t::iterator_dispatcher::get_child_nodes(q, current_index, extra_child_range);
+            std::pair<size_type, size_type> child_range = facade::iterator_dispatcher::get_child_nodes(q, current_index, extra_child_range);
 
             for (size_type i = extra_child_range.first; i <= extra_child_range.second; ++i) {
-                typename q_type::internal_type const & internal_value_at_index = iterator_super_t::iterator_dispatcher::get_internal_value(q, i);
-                typename q_type::value_type const & value_at_index = iterator_super_t::q_->q_.get_value(internal_value_at_index);
+                typename q_type::internal_type const & internal_value_at_index = facade::iterator_dispatcher::get_internal_value(q, i);
+                typename q_type::value_type const & value_at_index = facade::q_->q_.get_value(internal_value_at_index);
 
-                iterator_super_t::unvisited_nodes.push(value_at_index);
+                facade::unvisited_nodes.push(value_at_index);
             }
             
             for (size_type i = child_range.first; i <= child_range.second; ++i) {
-                typename q_type::internal_type const & internal_value_at_index = iterator_super_t::iterator_dispatcher::get_internal_value(q, i);
-                typename q_type::value_type const & value_at_index = iterator_super_t::q_->q_.get_value(internal_value_at_index);
+                typename q_type::internal_type const & internal_value_at_index = facade::iterator_dispatcher::get_internal_value(q, i);
+                typename q_type::value_type const & value_at_index = facade::q_->q_.get_value(internal_value_at_index);
 
-                iterator_super_t::unvisited_nodes.push(value_at_index);
+                facade::unvisited_nodes.push(value_at_index);
             }
         }
     };
 
 public:
-    class ordered_iterator : public ordered_iterator_base<ordered_iterator,
-                                                          typename super_t::q_type::ordered_iterator_dispatcher,
-                                                          typename super_t::indirect_cmp
-                                                          >
+    class ordered_iterator : public ordered_iterator_facade<ordered_iterator,
+                                                            typename super_t::q_type::ordered_iterator_dispatcher,
+                                                            typename super_t::indirect_cmp
+                                                            >
     {
-        typedef ordered_iterator_base<ordered_iterator,
-                                      typename super_t::q_type::ordered_iterator_dispatcher,
-                                      typename super_t::indirect_cmp
-                                      >
-        iterator_base_super_t;
+        typedef ordered_iterator_facade<ordered_iterator,
+                                        typename super_t::q_type::ordered_iterator_dispatcher,
+                                        typename super_t::indirect_cmp
+                                        >
+        facade;
 
     public:
         ordered_iterator(void):
-            iterator_base_super_t()
+            facade()
         {}
 
         ordered_iterator(const double_ended_priority_queue_mutable_wrapper * q, typename super_t::indirect_cmp const & cmp):
-            iterator_base_super_t(q, cmp)
+            facade(q, cmp)
         {}
 
         ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, typename super_t::indirect_cmp const & cmp):
-            iterator_base_super_t(it, q, cmp)
+            facade(it, q, cmp)
         {}
 
-        ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, typename super_t::indirect_cmp const & cmp, typename iterator_base_super_t::iterator_dispatcher const & dispatcher):
-            iterator_base_super_t(it, q, cmp, dispatcher)
+        ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, typename super_t::indirect_cmp const & cmp, typename facade::iterator_dispatcher const & dispatcher):
+            facade(it, q, cmp, dispatcher)
         {}
     };
     
@@ -750,48 +742,40 @@ public:
     }
 
 public:
-    class reverse_ordered_iterator : public ordered_iterator_base<reverse_ordered_iterator,
-                                                                  typename super_t::q_type::reverse_ordered_iterator_dispatcher,
-                                                                  indirect_reverse_cmp
-                                                                  >
+    class reverse_ordered_iterator : public ordered_iterator_facade<reverse_ordered_iterator,
+                                                                    typename super_t::q_type::reverse_ordered_iterator_dispatcher,
+                                                                    indirect_reverse_cmp
+                                                                    >
     {
-        typedef ordered_iterator_base<reverse_ordered_iterator,
-                                      typename super_t::q_type::reverse_ordered_iterator_dispatcher,
-                                      indirect_reverse_cmp>
-        iterator_base_super_t;
+        typedef ordered_iterator_facade<reverse_ordered_iterator,
+                                        typename super_t::q_type::reverse_ordered_iterator_dispatcher,
+                                        indirect_reverse_cmp>
+        facade;
 
     public:
         reverse_ordered_iterator(void):
-            iterator_base_super_t()
+            facade()
         {}
 
-        reverse_ordered_iterator(const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp):
-            iterator_base_super_t(q, cmp)
+        reverse_ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename facade::iterator_dispatcher const & dispatcher):
+            facade(it, q, cmp, dispatcher)
         {}
 
-        reverse_ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp):
-            iterator_base_super_t(it, q, cmp)
-        {}
-
-        reverse_ordered_iterator(typename super_t::const_list_iterator it, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename iterator_base_super_t::iterator_dispatcher const & dispatcher):
-            iterator_base_super_t(it, q, cmp, dispatcher)
-        {}
-
-                reverse_ordered_iterator(typename super_t::const_list_iterator it, std::pair<typename super_t::size_type, typename super_t::size_type> initial_indexes, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename iterator_base_super_t::iterator_dispatcher const & dispatcher):
-            iterator_base_super_t(it, q, cmp, dispatcher)
+        reverse_ordered_iterator(typename super_t::const_list_iterator it, std::pair<typename super_t::size_type, typename super_t::size_type> initial_indexes, const double_ended_priority_queue_mutable_wrapper * q, indirect_reverse_cmp const & cmp, typename facade::iterator_dispatcher const & dispatcher):
+            facade(it, q, cmp, dispatcher)
         {
-            const typename super_t::q_type * q_ = &(iterator_base_super_t::q_->q_);
+            const typename super_t::q_type * q_ = &(facade::q_->q_);
             
             for (size_t i = initial_indexes.first; i <= initial_indexes.second; ++i)
                 if (i != it->second) {
-                    typename super_t::q_type::internal_type const & internal_value_at_index = iterator_base_super_t::iterator_dispatcher::get_internal_value(q_, i);
-                    typename super_t::q_type::value_type const & value_at_index = iterator_base_super_t::q_->q_.get_value(internal_value_at_index);
+                    typename super_t::q_type::internal_type const & internal_value_at_index = facade::iterator_dispatcher::get_internal_value(q_, i);
+                    typename super_t::q_type::value_type const & value_at_index = facade::q_->q_.get_value(internal_value_at_index);
                 
-                    iterator_base_super_t::unvisited_nodes.push(value_at_index);
+                    facade::unvisited_nodes.push(value_at_index);
                 }
         }
     };
-    
+
     reverse_ordered_iterator reverse_ordered_begin(void) const
     {
         if (!super_t::empty()) {

@@ -766,7 +766,7 @@ public:
 
     reverse_ordered_iterator reverse_ordered_end(void) const
     {
-        return reverse_ordered_iterator(size(), this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(root()));
+        return reverse_ordered_iterator(size(), this, reverse_internal_compare(super_t::get_internal_cmp()), reverse_ordered_iterator_dispatcher(0));
     }
     /* iterators */
 };
