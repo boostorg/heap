@@ -89,8 +89,6 @@ class min_max_heap:
     typedef typename heap_base_maker::type super_t;
     typedef typename super_t::internal_type internal_type;
 
-    typedef IndexUpdater index_updater;
-
 #ifdef BOOST_NO_CXX11_ALLOCATOR
     typedef typename heap_base_maker::allocator_argument::template rebind<internal_type>::other internal_type_allocator;
 #else
@@ -98,6 +96,8 @@ class min_max_heap:
 #endif
     typedef std::vector<internal_type, internal_type_allocator> container_type;
 
+    typedef IndexUpdater index_updater;
+  
     container_type q_;
 
     static const unsigned int D = parameter::binding<BoundArgs, tag::arity, mpl::int_<2> >::type::value;
@@ -175,7 +175,7 @@ public:
         return super_t::value_comp();
     }
 
-    template <bool Regular>
+    template <bool Regular = true>
     bool compare(size_type i, size_type j) const
     {
         BOOST_ASSERT(i < this->size());
@@ -332,12 +332,12 @@ public:
     /* indexes */
 
     /* moves */
-    void trickle_down(size_type index)
+    void trickle_down(size_type i)
     {
-        if (is_on_compare_level(index))
-            trickle_down_impl<true>(index);
+        if (is_on_compare_level(i))
+            trickle_down_impl<true>(i);
         else
-            trickle_down_impl<false>(index);
+            trickle_down_impl<false>(i);
     }
 
     template <bool Regular>
@@ -450,6 +450,11 @@ protected:
     }
 #endif
 
+    value_type const & top(void) const
+    {
+        return min();
+    }
+    
     value_type const & min(void) const
     {
         BOOST_ASSERT(!empty());
@@ -464,6 +469,11 @@ protected:
         return super_t::get_value(q_[index_of_max()]);
     }
 
+    void pop(void)
+    {
+        pop_min();
+    }       
+
     void pop_min(void)
     {
         erase(index_of_min());
@@ -475,66 +485,45 @@ protected:
     }
 
 public:
+    template<typename U,
+             typename V,
+             typename W,
+             typename X>
+    struct rebind {
+        typedef min_max_heap<U, typename min_max_heap_signature::bind<boost::heap::stable<heap_base_maker::is_stable>,
+                                                                  boost::heap::stability_counter_type<typename heap_base_maker::stability_counter_type>,
+                                                                  boost::heap::arity<D>,
+                                                                  boost::heap::compare<V>,
+                                                                  boost::heap::allocator<W>
+                                                                  >::type,
+                           X
+                           > other;
+    };
+
+    template <class U> friend class priority_queue_mutable_wrapper;
+    template <class U> friend class double_ended_priority_queue_mutable_wrapper;
+  
     void update(size_type index)
     {
-        if(index == root())
-        {
-            return trickle_down(index);
-        }
+        if (index == root())
+          return trickle_down(index);
 
-        size_type parent = parent(index);
-
-        if(compare(parent, index))
-        {
-            return decrease(index);
-        }
-
-        size_type grandparent = grandparent(index);
-
-        if(grandparent < last()
-           && compare(index, grandparent))
-        {
-            return increase(index);
-        }
+        size_type parent = this->parent(index);
+        
+        if (compare(parent, index))
+          decrease(index);
+        else
+          increase(index);
     }
 
     void increase(size_type index)
     {
-        if(index == root()
-           || !is_on_compare_level(index))
-        {
-            trickle_down(index);
-        }
-        else
-        {
-            size_type parent = parent(index);
-
-            if(compare(parent, index))
-            {
-                trickle_down(index);
-            }
-
-            bubble_up(index);
-        }
+        bubble_up(index);
     }
 
     void decrease(size_type index)
     {
-        if(is_on_compare_level(index))
-        {
-            bubble_up(index);
-        }
-        else
-        {
-            size_type parent = parent(index);
-
-            if(compare(parent, index))
-            {
-                bubble_up(index);
-            }
-
-            trickle_down(index);
-        }
+        trickle_down(index);
     }
 
     void erase(size_type index)
@@ -545,8 +534,8 @@ public:
         swap(index, last());
         q_.pop_back();
 
-        if(!empty() && index != size())
-        {
+        if (!empty() && index != size()) {
+            bubble_up(index);
             trickle_down(index);
         }
     }
@@ -1039,7 +1028,7 @@ struct select_minmax_heap
     static const bool is_mutable = extract_mutable<BoundArgs>::value;
 
     typedef typename mpl::if_c<is_mutable,
-                               priority_queue_mutable_wrapper<min_max_heap<T, BoundArgs, nop_index_updater> >,
+                               double_ended_priority_queue_mutable_wrapper<min_max_heap<T, BoundArgs, nop_index_updater> >,
                                min_max_heap<T, BoundArgs, nop_index_updater>
                                >::type type;
 };

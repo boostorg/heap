@@ -389,3 +389,50 @@ BOOST_AUTO_TEST_CASE( min_max_heap_stable_test )
     run_min_max_heap_test<4, true>();
     run_min_max_heap_test<5, true>();
 }
+
+template <int D, bool stable>
+void run_min_max_heap_mutable_test(void)
+{
+    typedef boost::heap::min_max_heap<int, boost::heap::mutable_<true>,
+                                            boost::heap::arity<D>,
+                                            boost::heap::stable<stable>
+                                           > pri_queue;
+
+    BOOST_CONCEPT_ASSERT((boost::heap::MutablePriorityQueue<pri_queue>));
+
+    run_common_heap_tests<pri_queue>();
+    run_moveable_heap_tests<pri_queue>();
+    run_reserve_heap_tests<pri_queue>();
+    run_mutable_heap_tests<pri_queue>();
+
+    run_merge_tests<pri_queue>();
+
+    run_ordered_iterator_tests<pri_queue>();
+    run_reverse_ordered_iterator_tests<pri_queue>();
+
+    if (stable) {
+        typedef boost::heap::min_max_heap<q_tester,
+                                          boost::heap::mutable_<true>,
+                                          boost::heap::arity<D>,
+                                          boost::heap::stable<stable>
+                                          > stable_pri_queue;
+        run_stable_heap_tests<stable_pri_queue>();
+    }
+}
+
+BOOST_AUTO_TEST_CASE( min_max_heap_mutable_test )
+{
+    run_min_max_heap_mutable_test<2, false>();
+    run_min_max_heap_mutable_test<3, false>();
+    run_min_max_heap_mutable_test<4, false>();
+    run_min_max_heap_mutable_test<5, false>();
+}
+
+BOOST_AUTO_TEST_CASE( min_max_heap_mutable_stable_test )
+{
+    run_min_max_heap_mutable_test<2, true>();
+    run_min_max_heap_mutable_test<3, true>();
+    run_min_max_heap_mutable_test<4, true>();
+    run_min_max_heap_mutable_test<5, true>();
+}
+
