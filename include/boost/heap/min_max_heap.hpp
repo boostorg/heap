@@ -322,12 +322,12 @@ public:
 
         const std::pair<size_type, size_type> grandchildren = this->grandchildren(index);
 
-        size_type best_child = children.first;
+        size_type best = children.first;
 
-        best_between<Regular>(best_child, children.first + 1, children.second);
-        is_grandchild = best_between<Regular>(best_child, grandchildren.first, grandchildren.second);
+        best_between<Regular>(best, children.first + 1, children.second);
+        is_grandchild = best_between<Regular>(best, grandchildren.first, grandchildren.second);
 
-        return best_child;
+        return best;
     }
     /* indexes */
 
@@ -359,9 +359,8 @@ public:
                     trickle_down_impl<Regular>(m);
                 }
             }
-            else
-                if (compare<Regular>(m, i))
-                    swap(i, m);
+            else if (compare<Regular>(m, i))
+		swap(i, m);
         }
     }
 
@@ -393,8 +392,7 @@ public:
     {
         size_type grandparent = this->grandparent(i);
 
-        if(grandparent != npos()
-           && compare<Regular>(i, grandparent)) {
+        if (grandparent != npos() && compare<Regular>(i, grandparent)) {
             swap(i, grandparent);
             bubble_up_impl_<Regular>(grandparent);
         }
@@ -591,7 +589,8 @@ public:
              * The second part consists of odd levels and is a bit more complicated
              * to explore. The search has to go back up in the tree from the leaves
              * but since a node on an odd level is being pointed to by D^2 grandchildren
-             * it cannot be visited until all of its heirs have been visited.
+             * in the Hasse diagram, it cannot be visited until all of its heirs have
+	     * previously been visited.
              *
              * The 'min_max_ordered_iterator_status' structure is used to keep track
              * of this. It indicates for each node on an odd level whether its heirs
@@ -601,7 +600,7 @@ public:
              * reused to indicate to its own grandfather that it has been visited while
              * its siblings may not have yet been visited.
              *
-             * This method requires $O(log_D((D - 1) * (size() - 1) + 1))$ bytes.
+             * This method requires $O(\frac{(D - 1) * (size() - 1) + 1}{D})$ bytes.
              *
              * The following specific cases must be addressed (D = 3):
              *         0        1) when 0 is visited, it must add nodes 4-8 to the list
@@ -611,8 +610,8 @@ public:
              *     /   |   \       larger tree where the example would be a subtree.
              *    /    |    \   2) when 8 is visited, it must set its indicator and
              *   1     2     3     set the indicator for the non existing node 9 (in
-             *  /|\   /|           general for all its right siblings) and then add 2
-             * 4 5 6 7 8           if 7 has already been visited.
+             *  /|\   /|           general for all its right non existing siblings) and
+             * 4 5 6 7 8           then add 2 if 7 has already been visited.
             */
             const size_type last = heap->last();
             const bool on_compare_level = !(Forward ^ heap->is_on_compare_level(index));
@@ -1039,7 +1038,7 @@ struct select_minmax_heap
  * \class min_max_heap
  * \brief min-max heap class
  *
- * This class implements an immutable priority queue. Internally, the min-max heap is representated
+ * This class implements an double-ended priority queue. Internally, the min-max heap is represented
  * as a dynamically sized array (std::vector), that directly stores the values.
  *
  * The template parameter T is the type to be managed by the container.
@@ -1194,9 +1193,9 @@ public:
     }
 
     /**
-     * \b Effects: Returns a const_reference to the minimum element.
+     * \b Effects: Returns a const_reference to the min element.
      *
-     * \b Complexity:
+     * \b Complexity: Constant.
      *
      * */
     value_type const & min(void) const
@@ -1205,9 +1204,9 @@ public:
     }
 
     /**
-     * \b Effects: Returns a const_reference to the maximum element.
+     * \b Effects: Returns a const_reference to the max element.
      *
-     * \b Complexity:
+     * \b Complexity: Constant.
      *
      * */
     value_type const & max(void) const
@@ -1395,7 +1394,7 @@ public:
     /**
      * \b Effects: Removes the element with the highest priority from the priority queue.
      *
-     * \b Complexity:
+     * \b Complexity: Logarithmic.
      *
      * \b Note: Same as pop
      * */
@@ -1407,7 +1406,7 @@ public:
     /**
      * \b Effects: Removes the element with the lowest priority from the priority queue.
      *
-     * \b Complexity:
+     * \b Complexity: Logarithmic.
      *
      * */
     void pop_max(void)

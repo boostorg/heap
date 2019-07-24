@@ -19,7 +19,6 @@
 #include "mutable_heap_tests.hpp"
 #include "merge_heap_tests.hpp"
 
-#include <bitset>
 #include <set>
 #include <cmath>
 
@@ -436,3 +435,16 @@ BOOST_AUTO_TEST_CASE( min_max_heap_mutable_stable_test )
     run_min_max_heap_mutable_test<5, true>();
 }
 
+BOOST_AUTO_TEST_CASE( min_max_heap_compare_lookup_test )
+{
+    typedef boost::heap::min_max_heap<int, boost::heap::arity<2>,
+				      boost::heap::compare<less_with_T>,
+				      boost::heap::allocator<std::allocator<int> > > pri_queue;
+    run_common_heap_tests<pri_queue>();
+}
+
+BOOST_AUTO_TEST_CASE( min_max_heap_leak_test )
+{
+    typedef boost::heap::min_max_heap<boost::shared_ptr<int>, boost::heap::arity<2> > pri_queue;
+    run_leak_check_test<pri_queue>();
+}
