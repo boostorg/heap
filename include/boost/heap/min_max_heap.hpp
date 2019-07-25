@@ -502,25 +502,18 @@ public:
   
     void update(size_type index)
     {
-        if (index == root())
-          return trickle_down(index);
-
-        size_type parent = this->parent(index);
-        
-        if (compare<true>(index, parent))
-          decrease(index);
-        else
-          increase(index);
+        bubble_up(index);
+        trickle_down(index);
     }
 
     void increase(size_type index)
     {
-        bubble_up(index);
+        update(index);
     }
 
     void decrease(size_type index)
     {
-        trickle_down(index);
+        update(index);
     }
 
     void erase(size_type index)
@@ -531,10 +524,8 @@ public:
         swap(index, last());
         q_.pop_back();
 
-        if (!empty() && index != size()) {
-            bubble_up(index);
-            trickle_down(index);
-        }
+        if (!empty() && index != size())
+            update(index);
     }
     /* interface */
 

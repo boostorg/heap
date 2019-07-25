@@ -571,12 +571,12 @@ class double_ended_priority_queue_mutable_wrapper:
     public priority_queue_mutable_wrapper<PriorityQueueType>
 {
     typedef priority_queue_mutable_wrapper<PriorityQueueType> super_t;
+    typedef typename super_t::value_compare base_value_compare;
 
-    struct indirect_reverse_cmp:
-        public super_t::value_compare
+    struct indirect_reverse_cmp: public base_value_compare
     {
-        indirect_reverse_cmp(typename super_t::value_compare const & cmp = super_t::value_compare()):
-            super_t::value_compare(cmp)
+        indirect_reverse_cmp(base_value_compare const & cmp = base_value_compare()):
+            base_value_compare(cmp)
         {}
 
         bool operator()(typename super_t::const_list_iterator const & lhs, typename super_t::const_list_iterator const & rhs) const
@@ -586,7 +586,7 @@ class double_ended_priority_queue_mutable_wrapper:
     };
     
 public:
-    double_ended_priority_queue_mutable_wrapper(typename super_t::value_compare const & cmp = super_t::value_compare()):
+    double_ended_priority_queue_mutable_wrapper(base_value_compare const & cmp = base_value_compare()):
         super_t(cmp)
     {}
 
