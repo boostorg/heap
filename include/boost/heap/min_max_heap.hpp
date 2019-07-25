@@ -175,7 +175,7 @@ public:
         return super_t::value_comp();
     }
 
-    template <bool Regular = true>
+    template <bool Regular>
     bool compare(size_type i, size_type j) const
     {
         BOOST_ASSERT(i < this->size());
@@ -507,7 +507,7 @@ public:
 
         size_type parent = this->parent(index);
         
-        if (compare(index, parent))
+        if (compare<true>(index, parent))
           decrease(index);
         else
           increase(index);
@@ -978,11 +978,20 @@ struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_st
     typedef min_max_ordered_iterator_status_base<2, IntType> base;
 
     min_max_ordered_iterator_status(IntType max_index = 0) :
-        base(max_index),
-        masks{0, 0x01, 0x03, 0, 0x0F, 0, 0, 0}
-    {}
+        base(max_index)
+#ifndef BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX
+        ,masks{0, 0x01, 0x03, 0, 0x0F, 0, 0, 0} {}
+    const
+#else
+    {
+        std::memset(masks, 0, 8);
+        masks[1] = 0x01;
+        masks[2] = 0x03;
+        masks[4] = 0x0F;
+    }
+#endif
 
-    const uint8_t masks[8];
+    uint8_t masks[8];
 
     void set(IntType index)
     {

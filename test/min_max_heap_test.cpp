@@ -109,45 +109,50 @@ BOOST_AUTO_TEST_CASE( min_max_heap_expected_mask_test )
     std::set<unsigned int> mask;
     std::set<unsigned int> umask;
 
-#define LOCALTEST(base, max, index, ...)                                \
+    std::vector<unsigned int> values;
+    for (unsigned int i = 0; i <= 12; ++i)
+      values.push_back(i);
+    const std::vector<unsigned int>::const_iterator it = values.begin();
+    
+#define LOCALTEST(base, max, index, begin, end)                         \
     masks(base, max, index, mask, umask);                               \
-    BOOST_REQUIRE(mask == std::set<unsigned int>(__VA_ARGS__));
+    BOOST_REQUIRE(mask == std::set<unsigned int>(it + begin, it + end + 1));
 
-    LOCALTEST(2, 1, 0, {1,2});
-    LOCALTEST(2, 1, 1, {1});
-    LOCALTEST(2, 2, 0, {1,2});
-    LOCALTEST(2, 2, 1, {1});
-    LOCALTEST(2, 2, 2, {2});
-    LOCALTEST(2, 3, 0, {3,4,5,6});
-    LOCALTEST(2, 3, 1, {3,4});
-    LOCALTEST(2, 3, 2, {5,6});
-    LOCALTEST(2, 3, 3, {3});
-    LOCALTEST(2, 4, 0, {3,4,5,6});
-    LOCALTEST(2, 4, 1, {3,4});
-    LOCALTEST(2, 4, 2, {5,6});
-    LOCALTEST(2, 4, 3, {3});
-    LOCALTEST(2, 4, 4, {4});
+    LOCALTEST(2, 1, 0, 1, 2);
+    LOCALTEST(2, 1, 1, 1, 1);
+    LOCALTEST(2, 2, 0, 1, 2);
+    LOCALTEST(2, 2, 1, 1, 1);
+    LOCALTEST(2, 2, 2, 2, 2);
+    LOCALTEST(2, 3, 0, 3, 6);
+    LOCALTEST(2, 3, 1, 3, 4);
+    LOCALTEST(2, 3, 2, 5, 6);
+    LOCALTEST(2, 3, 3, 3, 3);
+    LOCALTEST(2, 4, 0, 3, 6);
+    LOCALTEST(2, 4, 1, 3, 4);
+    LOCALTEST(2, 4, 2, 5, 6);
+    LOCALTEST(2, 4, 3, 3, 3);
+    LOCALTEST(2, 4, 4, 4, 4);
 
-    LOCALTEST(3, 1, 0, {1,2,3});
-    LOCALTEST(3, 1, 1, {1});
-    LOCALTEST(3, 2, 0, {1,2,3});
-    LOCALTEST(3, 2, 1, {1});
-    LOCALTEST(3, 2, 2, {2});
-    LOCALTEST(3, 3, 0, {1,2,3});
-    LOCALTEST(3, 3, 1, {1});
-    LOCALTEST(3, 3, 2, {2});
-    LOCALTEST(3, 3, 3, {3});
-    LOCALTEST(3, 4, 0, {4,5,6,7,8,9,10,11,12});
-    LOCALTEST(3, 4, 1, {4,5,6});
-    LOCALTEST(3, 4, 2, {7,8,9});
-    LOCALTEST(3, 4, 3, {10,11,12});
-    LOCALTEST(3, 4, 4, {4});
-    LOCALTEST(3, 5, 0, {4,5,6,7,8,9,10,11,12});
-    LOCALTEST(3, 5, 1, {4,5,6});
-    LOCALTEST(3, 5, 2, {7,8,9});
-    LOCALTEST(3, 5, 3, {10,11,12});
-    LOCALTEST(3, 5, 4, {4});
-    LOCALTEST(3, 5, 5, {5});
+    LOCALTEST(3, 1, 0, 1, 3);
+    LOCALTEST(3, 1, 1, 1, 1);
+    LOCALTEST(3, 2, 0, 1, 3);
+    LOCALTEST(3, 2, 1, 1, 1);
+    LOCALTEST(3, 2, 2, 2, 2);
+    LOCALTEST(3, 3, 0, 1, 3);
+    LOCALTEST(3, 3, 1, 1, 1);
+    LOCALTEST(3, 3, 2, 2, 2);
+    LOCALTEST(3, 3, 3, 3, 3);
+    LOCALTEST(3, 4, 0, 4, 12);
+    LOCALTEST(3, 4, 1, 4, 6);
+    LOCALTEST(3, 4, 2, 7, 9);
+    LOCALTEST(3, 4, 3, 10, 12);
+    LOCALTEST(3, 4, 4, 4, 4);
+    LOCALTEST(3, 5, 0, 4, 12);
+    LOCALTEST(3, 5, 1, 4, 6);
+    LOCALTEST(3, 5, 2, 7, 9);
+    LOCALTEST(3, 5, 3, 10, 12);
+    LOCALTEST(3, 5, 4, 4, 4);
+    LOCALTEST(3, 5, 5, 5, 5);
 #undef LOCALTEST
 }
 
@@ -288,7 +293,7 @@ void run_min_max_heap_iterator_dispatcher_upward_test()
 
 BOOST_AUTO_TEST_CASE( min_max_heap_iterator_dispatcher_test )
 {
-    typedef typename boost::heap::detail::min_max_heap_signature::bind<
+    typedef boost::heap::detail::min_max_heap_signature::bind<
         boost::parameter::void_,
         boost::parameter::void_,
         boost::parameter::void_,
@@ -296,7 +301,7 @@ BOOST_AUTO_TEST_CASE( min_max_heap_iterator_dispatcher_test )
         boost::parameter::void_,
         boost::parameter::void_>::type signature;
     typedef dispatcher_queue<int, signature, boost::heap::detail::nop_index_updater> pri_queue;
-    typedef typename pri_queue::template iterator_dispatcher<true> iterator_dispatcher;
+    typedef pri_queue::iterator_dispatcher<true> iterator_dispatcher;
 
     pri_queue q;
     std::pair<long unsigned int, long unsigned int> regular;
