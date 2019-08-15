@@ -989,9 +989,10 @@ struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_st
         IntType chunk, offset, heirs_octuple, heirs_left;
         base::positions_by_8(index, chunk, offset, heirs_octuple, heirs_left);
 
-        std::memset(base::candidates.data() + chunk, 0xFF, heirs_octuple);
-        // disjoint heirs
-        base::candidates[chunk] |= masks[heirs_left] << (8 - heirs_left - offset);
+        if (0 < heirs_octuple)
+          std::memset(base::candidates.data() + chunk, 0xFF, heirs_octuple);
+        else
+          base::candidates[chunk] |= masks[heirs_left] << (8 - heirs_left - offset);
     }
 
     void reset(IntType index)
@@ -999,9 +1000,10 @@ struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_st
         IntType chunk, offset, heirs_octuple, heirs_left;
         base::positions_by_8(index, chunk, offset, heirs_octuple, heirs_left);
 
-        std::memset(base::candidates.data() + chunk, 0, heirs_octuple);
-        // disjoint heirs
-        base::candidates[chunk] &= ~(masks[heirs_left] << (8 - heirs_left - offset));
+        if (0 < heirs_octuple)
+          std::memset(base::candidates.data() + chunk, 0, heirs_octuple);
+        else
+          base::candidates[chunk] &= ~(masks[heirs_left] << (8 - heirs_left - offset));
     }
 
     bool is_complete(IntType index)
@@ -1009,15 +1011,21 @@ struct min_max_ordered_iterator_status<2, IntType> : min_max_ordered_iterator_st
         IntType chunk, offset, heirs;
         base::positions(index, chunk, offset, heirs);
 
-        while (8 <= heirs) {
+        if (8 <= heirs) {
+          do {
             if (base::candidates[chunk] != 0xFF)
                 return false;
             ++chunk;
             heirs -= 8;
+          }
+          while (8 <= heirs);
+
+          return true;
         }
-        //disjoint heirs
-        const uint8_t mask = masks[heirs] << (8 - heirs - offset);
-        return (mask && (base::candidates[chunk] & mask) == mask) || !mask;
+        else {
+          const uint8_t mask = masks[heirs] << (8 - heirs - offset);
+          return (mask && (base::candidates[chunk] & mask) == mask) || !mask;
+        }
     }
 };
 
