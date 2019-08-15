@@ -90,7 +90,9 @@ matrix:
 
     - os: linux
       compiler: clang++-libc++
-      env: TOOLSET=clang CXXSTD=03,11,14,1z
+# libc++ doesn't implement aligned operator new
+#      env: TOOLSET=clang CXXSTD=03,11,14,1z
+      env: TOOLSET=clang CXXSTD=03,11,14
       addons:
         apt:
           packages:
