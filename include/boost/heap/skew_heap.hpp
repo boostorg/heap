@@ -544,7 +544,6 @@ public:
         else
             BOOST_HEAP_ASSERT(size_holder::get_size() == 0);
 
-        top->~node();
 #ifdef BOOST_NO_CXX11_ALLOCATOR
         top->~node();
         allocator_type::deallocate(top, 1);
