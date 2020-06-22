@@ -54,11 +54,7 @@ public:
 protected:
     typedef std::pair<value_type, size_type> node_type;
 
-#ifdef BOOST_NO_CXX11_ALLOCATOR
-    typedef std::list<node_type, typename allocator_type::template rebind<node_type>::other> object_list;
-#else
-    typedef std::list<node_type, typename std::allocator_traits<allocator_type>::template rebind_alloc<node_type>> object_list;
-#endif
+    typedef std::list<node_type, typename boost::allocator_rebind<allocator_type, node_type>::type> object_list;
 
     typedef typename object_list::iterator list_iterator;
     typedef typename object_list::const_iterator const_list_iterator;
@@ -298,11 +294,7 @@ public:
         }
    
         std::priority_queue<iterator,
-#ifdef BOOST_NO_CXX11_ALLOCATOR
-                            std::vector<iterator, typename allocator_type::template rebind<iterator>::other >,
-#else
-                            std::vector<iterator, typename std::allocator_traits<allocator_type>::template rebind_alloc<iterator> >,
-#endif
+							std::vector<iterator, typename boost::allocator_rebind<allocator_type, iterator>::type>,
                             IndirectCmp
                            > unvisited_nodes;
         const Wrapper * q_;
