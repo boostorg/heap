@@ -101,6 +101,13 @@ void run_d_ary_heap_mutable_test(void)
                                                > stable_pri_queue;
         run_stable_heap_tests<stable_pri_queue>();
     }
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+    cmpthings ord;
+    boost::heap::d_ary_heap<thing, boost::heap::mutable_<true>, boost::heap::arity<D>,
+            boost::heap::compare<cmpthings>, boost::heap::stable<stable> > vpq(ord);
+    vpq.emplace(5, 6, 7);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE( d_ary_heap_mutable_test )
