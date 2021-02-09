@@ -38,13 +38,6 @@ namespace boost  {
 namespace heap   {
 namespace detail {
 
-struct nop_index_updater
-{
-    template <typename T>
-    static void run(T &, std::size_t)
-    {}
-};
-
 typedef parameter::parameters<boost::parameter::required<tag::arity>,
                               boost::parameter::optional<tag::allocator>,
                               boost::parameter::optional<tag::compare>,
