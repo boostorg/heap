@@ -342,6 +342,12 @@ _heap_ provides the following data structures:
         constraints for the tree structure, all heap operations can be performed in O(log n).
      ]
     ]
+
+    [[[classref boost::heap::min_max_heap]]
+     [
+        [@https://en.wikipedia.org/wiki/Min-max_heap Min-max heaps] are a combination of a min heap and max heap in the same tree structure that allow to retrieve both the maximum and the minimum in constant time.
+     ]
+    ]
 ]
 
 [table Comparison of amortized complexity
@@ -355,6 +361,7 @@ _heap_ provides the following data structures:
 
     [[[classref boost::heap::pairing_heap]]         [[^O(1)]]   [O(2**2*log(log(N)))]   [O(log(N))] [O(2**2*log(log(N)))]   [O(2**2*log(log(N)))]  [O(2**2*log(log(N)))]    [O(2**2*log(log(N)))]   [O(2**2*log(log(N)))]]
     [[[classref boost::heap::skew_heap]]            [[^O(1)]]   [O(log(N))]     [O(log(N))]  [O(log(N))]   [O(log(N))]       [O(log(N))]     [O(log(N))]    [O(log(N+M))]]
+    [[[classref boost::heap::min_max_heap]]            [[^O(1)]]   [O(log(N))]     [O(log(N))]  [O(log(N))]   [O(log(N))]       [O(log(N))]     [O(log(N))]    [O((N+M)*log(N+M))]]
 ]
 
 
@@ -392,7 +399,7 @@ The data structures can be configured with [@boost:/libs/parameter/doc/html/inde
     ]
 
     [[[classref boost::heap::arity]]
-     [Specifies the arity of a d-ary heap. For details, please consult the class reference of [classref boost::heap::d_ary_heap]]
+     [Specifies the arity of a d-ary or a min-max heap. For details, please consult the class reference of [classref boost::heap::d_ary_heap] and [classref boost::heap::min_max_heap].]
     ]
 
     [[[classref boost::heap::store_parent_pointer]]

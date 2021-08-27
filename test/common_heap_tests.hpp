@@ -30,14 +30,14 @@ void random_shuffle(RandomIt first, RandomIt last)
     for (difference_type i = n-1; i > 0; --i) {
         difference_type j = std::rand() % (i + 1);
         if (j != i) {
-		   using std::swap;  
+                   using std::swap;
            swap(first[i], first[j]);
         }
     }
 }
 
 #else
-	
+
 using std::random_shuffle;
 
 #endif
@@ -303,6 +303,32 @@ void pri_queue_test_ordered_iterators(void)
     }
 }
 
+template <typename pri_queue>
+void pri_queue_test_reverse_ordered_iterators(void)
+{
+    for (int i = 6; i != test_size; ++i) {
+        test_data data = make_test_data(i);
+        test_data shuffled (data);
+        random_shuffle(shuffled.begin(), shuffled.end());
+        pri_queue q;
+        BOOST_REQUIRE(q.reverse_ordered_begin() == q.reverse_ordered_end());
+        fill_q(q, shuffled);
+
+        test_data data_from_queue(q.reverse_ordered_begin(), q.reverse_ordered_end());
+        BOOST_REQUIRE(data == data_from_queue);
+
+        for (unsigned long j = 0; j != data.size(); ++j)
+            BOOST_REQUIRE(std::find(q.reverse_ordered_begin(), q.reverse_ordered_end(), data[j]) != q.reverse_ordered_end());
+
+        for (unsigned long j = 0; j != data.size(); ++j)
+            BOOST_REQUIRE(std::find(q.reverse_ordered_begin(), q.reverse_ordered_end(), data[j] + data.size()) == q.reverse_ordered_end());
+
+        for (unsigned long j = 0; j != data.size(); ++j) {
+            BOOST_REQUIRE_EQUAL((long)std::distance(q.begin(), q.end()), (long)(data.size() - j));
+            q.pop();
+        }
+    }
+}
 
 template <typename pri_queue>
 void pri_queue_test_equality(void)
