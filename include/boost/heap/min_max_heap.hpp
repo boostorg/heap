@@ -241,18 +241,17 @@ public:
 
     std::pair<size_type, size_type> children(size_type index) const
     {
-        const size_type child = first_child(index);
-        return std::make_pair(child, child + D - 1);
+        return std::make_pair(first_child(index), last_child(index));
     }
 
     size_type first_grandchild(size_type index) const
     {
-        return D * D * index + D + 1;
+        return first_child(first_child(index));
     }
 
     size_type last_grandchild(size_type index) const
     {
-        return D * D * index + D * (D + 1);
+        return last_child(last_child(index));
     }
 
     std::pair<size_type, size_type> grandchildren(size_type index) const
@@ -569,27 +568,32 @@ public:
         std::pair<size_type, size_type> get_child_nodes(const min_max_heap * heap, size_type index, std::pair<size_type, size_type> & extra_child_nodes)
         {
             /* As stated in the article, the Hasse diagram is divided in two parts.
-             * The first one consists of even levels and can be explored like a
-             * regular binary tree except that the number of children of a node
-             * is D^2 instead of D because odd levels are skipped.
-             * The second part consists of odd levels and is a bit more complicated
-             * to explore. The search has to go back up in the tree from the leaves
-             * but since a node on an odd level is being pointed to by D^2 grandchildren
-             * in the Hasse diagram, it cannot be visited until all of its heirs have
-             * previously been visited.
+             * 
+             * The first one starts from the root and consists of even level nodes.
+             * It can be explored like a regular tree, by skipping nodes on odd levels.
+             * Thus, the number of children of such nodes is at most D^2 instead of D.
+             * 
+             * Conversely, successors of odd level nodes converge back to the opposite
+             * extremum of the root. Such nodes are being pointed to by at most D^2
+             * grandchildren. Additionally, they cannot be visited until all of their heirs
+             * have previously been visited, effectively 'reversing' the typical exploration
+             * denoted for even level nodes.
              *
              * The 'min_max_ordered_iterator_status' structure is used to keep track
              * of this. It indicates for each node on an odd level whether its heirs
-             * have been visited. When the last heir is being visited, it adds the
-             * node to the potential candidates to be visited next. Furthermore, when
-             * this happens, the markers for its heirs are reset and will then be
+             * have been visited. When the last heir is being visited, it adds its
+             * grandparent to the potential candidates to be visited next. Furthermore,
+             * when this happens, the markers for its heirs are reset and will then be
              * reused to indicate to its own grandfather that it has been visited while
              * its siblings may not have yet been visited.
+             * 
+             * Additionally, if a node on an odd level does not have any child, it must be
+             * added by its parent.
              *
-             * This method requires $O(\frac{(D - 1) * (size() - 1) + 1}{D})$ bytes.
+             * This method requires O(((D - 1) * (size() - 1) + 1) / D) bytes.
              *
-             * The following specific cases must be addressed (D = 3):
-             *         0        1) when 0 is visited, it must add nodes 4-8 to the list
+             * The following specific cases must be addressed (for D = 3):
+             *         0        1) when 0 is visited, nodes 4-8 are added to the list
              *        /|\          of potential candidates to be visited next, as well
              *       / | \         as node 3. This explains the 'extra_child_nodes' as
              *      /  |  \        node denoted 4-8 and 3 might not be consecutive in a
@@ -597,7 +601,8 @@ public:
              *    /    |    \   2) when 8 is visited, it must set its indicator and
              *   1     2     3     set the indicator for the non existing node 9 (in
              *  /|\   /|           general for all its right non existing siblings) and
-             * 4 5 6 7 8           then add 2 if 7 has already been visited.
+             * 4 5 6 7 8           then add node 2 if node 7 has already been visited. If
+             *                     not, node 7 will add node 2 when it is visited later on.
             */
             const size_type last = heap->last();
             const bool on_compare_level = !(Forward ^ heap->is_on_compare_level(index));
