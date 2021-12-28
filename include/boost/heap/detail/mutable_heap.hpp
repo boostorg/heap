@@ -352,7 +352,9 @@ public:
     template <class... Args>
     handle_type emplace(Args&&... args)
     {
-        objects.push_front(std::make_pair(std::forward<Args>(args)..., 0));
+        objects.emplace_front(std::piecewise_construct,
+                              std::forward_as_tuple(std::forward<Args>(args)...),
+                              std::forward_as_tuple(0));
         list_iterator ret = objects.begin();
         q_.push(ret);
         return handle_type(ret);
