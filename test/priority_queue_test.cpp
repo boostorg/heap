@@ -9,8 +9,6 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-
 #include <boost/heap/priority_queue.hpp>
 
 #include "common_heap_tests.hpp"
