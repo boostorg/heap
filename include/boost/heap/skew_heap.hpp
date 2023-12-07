@@ -196,6 +196,10 @@ struct make_skew_heap_base
             base_type( arg )
         {}
 
+        type( allocator_type const& arg ) :
+            allocator_type( arg )
+        {}
+
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         type( type&& rhs ) :
             base_type( std::move( static_cast< base_type& >( rhs ) ) ),
@@ -349,6 +353,12 @@ public:
     explicit skew_heap( value_compare const& cmp = value_compare() ) :
         super_t( cmp ),
         root( NULL )
+    {}
+
+    /// \copydoc boost::heap::priority_queue::priority_queue(allocator_type const &)
+    explicit skew_heap( allocator_type const& alloc = allocator_type() ) :
+        super_t( alloc ),
+        top_element( 0 )
     {}
 
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue const &)

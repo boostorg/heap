@@ -64,6 +64,10 @@ struct make_fibonacci_heap_base
             base_type( arg )
         {}
 
+        type( allocator_type const& arg ) :
+            allocator_type( arg )
+        {}
+
         type( type const& rhs ) :
             base_type( static_cast< base_type const& >( rhs ) ),
             allocator_type( static_cast< allocator_type const& >( rhs ) )
@@ -213,6 +217,12 @@ public:
     /// \copydoc boost::heap::priority_queue::priority_queue(value_compare const &)
     explicit fibonacci_heap( value_compare const& cmp = value_compare() ) :
         super_t( cmp ),
+        top_element( 0 )
+    {}
+
+    /// \copydoc boost::heap::priority_queue::priority_queue(allocator_type const &)
+    explicit fibonacci_heap( allocator_type const& alloc = allocator_type() ) :
+        super_t( alloc ),
         top_element( 0 )
     {}
 

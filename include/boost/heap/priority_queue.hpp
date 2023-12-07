@@ -118,6 +118,16 @@ public:
     {}
 
     /**
+     * \b Effects: constructs an empty priority queue.
+     *
+     * \b Complexity: Constant.
+     *
+     * */
+    explicit priority_queue( allocator_type const& alloc = allocator_type() ) :
+        q_( alloc )
+    {}
+
+    /**
      * \b Effects: copy-constructs priority queue from rhs.
      *
      * \b Complexity: Linear.
