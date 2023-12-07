@@ -10,7 +10,6 @@
 #define BOOST_HEAP_PRIORITY_QUEUE_HPP
 
 #include <algorithm>
-#include <queue>
 #include <utility>
 #include <vector>
 
@@ -123,7 +122,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    explicit priority_queue( allocator_type const& alloc = allocator_type() ) :
+    explicit priority_queue( allocator_type const& alloc ) :
         q_( alloc )
     {}
 

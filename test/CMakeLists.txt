@@ -37,6 +37,7 @@ foreach(Test ${Tests})
     target_link_libraries(boost_heap_${Test} PRIVATE
         Boost::heap
         Boost::unit_test_framework
+        Boost::container
     )
 
 

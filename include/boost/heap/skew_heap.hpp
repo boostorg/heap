@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <vector>
 
 #include <boost/array.hpp>
 #include <boost/assert.hpp>
@@ -356,9 +355,9 @@ public:
     {}
 
     /// \copydoc boost::heap::priority_queue::priority_queue(allocator_type const &)
-    explicit skew_heap( allocator_type const& alloc = allocator_type() ) :
+    explicit skew_heap( allocator_type const& alloc ) :
         super_t( alloc ),
-        top_element( 0 )
+        root( 0 )
     {}
 
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue const &)

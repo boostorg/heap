@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <vector>
 
 #include <boost/assert.hpp>
 
@@ -62,6 +61,10 @@ struct make_pairing_heap_base
     {
         type( compare_argument const& arg ) :
             base_type( arg )
+        {}
+
+        type( allocator_type const& arg ) :
+            allocator_type( arg )
         {}
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -225,6 +228,12 @@ public:
     /// \copydoc boost::heap::priority_queue::priority_queue(value_compare const &)
     explicit pairing_heap( value_compare const& cmp = value_compare() ) :
         super_t( cmp ),
+        root( NULL )
+    {}
+
+    /// \copydoc boost::heap::priority_queue::priority_queue(allocator_type const &)
+    explicit pairing_heap( allocator_type const& alloc ) :
+        super_t( alloc ),
         root( NULL )
     {}
 

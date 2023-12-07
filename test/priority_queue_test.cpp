@@ -32,6 +32,13 @@ void run_common_priority_queue_tests( void )
         typedef boost::heap::priority_queue< q_tester, boost::heap::stable< stable > > stable_pri_queue;
         run_stable_heap_tests< stable_pri_queue >();
     }
+
+    typedef boost::heap::priority_queue< int,
+                                         boost::heap::stable< stable >,
+                                         boost::heap::allocator< boost::container::pmr::polymorphic_allocator< int > > >
+        pmr_pri_queue;
+
+    pri_queue_test_stateful_allocator< pmr_pri_queue >();
 }
 
 BOOST_AUTO_TEST_CASE( std_pri_queue_test )

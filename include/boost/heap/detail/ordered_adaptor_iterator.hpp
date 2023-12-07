@@ -9,7 +9,6 @@
 #ifndef BOOST_HEAP_DETAIL_ORDERED_ADAPTOR_ITERATOR_HPP
 #define BOOST_HEAP_DETAIL_ORDERED_ADAPTOR_ITERATOR_HPP
 
-#include <cassert>
 #include <limits>
 
 #include <boost/assert.hpp>

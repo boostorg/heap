@@ -14,7 +14,12 @@
 
 #include <boost/concept/assert.hpp>
 #include <boost/concept_archetype.hpp>
+#include <boost/container/pmr/global_resource.hpp>
+#include <boost/container/pmr/memory_resource.hpp>
+#include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <boost/test/tools/old/interface.hpp>
 
 #include <boost/heap/heap_concepts.hpp>
 
@@ -70,9 +75,11 @@ test_data make_test_data( int size, int offset = 0, int strive = 1 )
 template < typename pri_queue, typename data_container >
 void check_q( pri_queue& q, data_container const& expected )
 {
+    assert( q.size() == expected.size() );
     BOOST_REQUIRE_EQUAL( q.size(), expected.size() );
 
     for ( unsigned int i = 0; i != expected.size(); ++i ) {
+        assert( q.size() == expected.size() - i );
         BOOST_REQUIRE_EQUAL( q.size(), expected.size() - i );
         BOOST_REQUIRE_EQUAL( q.top(), expected[ expected.size() - 1 - i ] );
         q.pop();
@@ -451,6 +458,28 @@ void run_leak_check_test( void )
 {
     pri_queue q;
     q.push( boost::shared_ptr< int >( new int( 0 ) ) );
+}
+
+template < typename pri_queue >
+void pri_queue_test_stateful_allocator( void )
+{
+    boost::container::pmr::memory_resource* mr = boost::container::pmr::get_default_resource();
+
+    for ( int i = 0; i != test_size; ++i ) {
+        pri_queue q { mr };
+        test_data data = make_test_data( i );
+        fill_q( q, data );
+        check_q( q, data );
+    }
+
+    for ( int i = 0; i != test_size; ++i ) {
+        pri_queue q { mr };
+        test_data data = make_test_data( i );
+        fill_q( q, data );
+
+        pri_queue r( q );
+        check_q( r, data );
+    }
 }
 
 

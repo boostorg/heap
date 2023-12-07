@@ -9,8 +9,6 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-
 #include <boost/heap/fibonacci_heap.hpp>
 
 #include "common_heap_tests.hpp"
@@ -49,6 +47,15 @@ void run_fibonacci_heap_test( void )
             stable_pri_queue;
         run_stable_heap_tests< stable_pri_queue >();
     }
+
+    typedef boost::heap::fibonacci_heap< int,
+                                         boost::heap::stable< stable >,
+                                         boost::heap::compare< std::less< int > >,
+                                         boost::heap::allocator< boost::container::pmr::polymorphic_allocator< int > >,
+                                         boost::heap::constant_time_size< constant_time_size > >
+        pmr_pri_queue;
+
+    pri_queue_test_stateful_allocator< pmr_pri_queue >();
 }
 
 BOOST_AUTO_TEST_CASE( fibonacci_heap_test )

@@ -224,7 +224,7 @@ public:
     {}
 
     /// \copydoc boost::heap::priority_queue::priority_queue(allocator_type const &)
-    explicit binomial_heap( allocator_type const& alloc = allocator_type() ) :
+    explicit binomial_heap( allocator_type const& alloc ) :
         super_t( alloc ),
         top_element( 0 )
     {}
