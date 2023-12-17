@@ -7,6 +7,10 @@ cmake_minimum_required(VERSION 3.5...3.16)
 
 project(boost_heap VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 
+option(BOOST_HEAP_BUILD_TESTS "Build boost::heap tests" OFF)
+option(BOOST_HEAP_USE_FILE_SET "Use FILE_SET for boost::heap" OFF)
+
+
 add_library(boost_heap INTERFACE)
 add_library(Boost::heap ALIAS boost_heap)
 
@@ -28,7 +32,7 @@ target_link_libraries(boost_heap
     Boost::type_traits
 )
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.23)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.23 AND BOOST_HEAP_USE_FILE_SET)
     set(Headers
         include/boost/heap/detail/ilog2.hpp
         include/boost/heap/detail/heap_comparison.hpp
@@ -51,8 +55,6 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.23)
     target_sources(boost_heap PUBLIC FILE_SET HEADERS FILES ${Headers} )
 endif()
 
-option(BOOST_HEAP_BUILD_TESTS "Build boost::heap tests" ${BUILD_TESTING})
-
-if( BOOST_HEAP_BUILD_TESTS )
+if( BOOST_HEAP_BUILD_TESTS OR BUILD_TESTING )
     add_subdirectory(test)
 endif()
