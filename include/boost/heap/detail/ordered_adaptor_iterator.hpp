@@ -15,6 +15,7 @@
 #include <boost/concept_check.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
 namespace boost { namespace heap { namespace detail {
 
