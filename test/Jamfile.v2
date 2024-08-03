@@ -8,6 +8,8 @@ import regex ;
 
 path-constant HERE : . ;
 
+project : requirements <library>/boost/heap//boost_heap ;
+
 rule test_all
 {
     local all_rules ;
