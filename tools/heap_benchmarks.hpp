@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "high_resolution_timer.hpp"
-#include <boost/foreach.hpp>
 
 #include <boost/heap/heap_merge.hpp>
 

@@ -20,7 +20,6 @@ target_link_libraries(boost_heap
   INTERFACE
     Boost::array
     Boost::assert
-    Boost::bind
     Boost::concept_check
     Boost::config
     Boost::core
