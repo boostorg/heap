@@ -11,7 +11,6 @@ add_subdirectory(../.. boostorg/heap)
 set(deps
     array
     assert
-    bind
     concept_check
     config
     container_hash
