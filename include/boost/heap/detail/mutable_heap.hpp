@@ -407,7 +407,7 @@ public:
      * */
     void increase( handle_type handle, const_reference v )
     {
-        BOOST_ASSERT( !value_compare()( v, handle.iterator->first ) );
+        BOOST_ASSERT( !value_comp()( v, handle.iterator->first ) );
         handle.iterator->first = v;
         increase( handle );
     }
@@ -436,7 +436,7 @@ public:
      * */
     void decrease( handle_type handle, const_reference v )
     {
-        BOOST_ASSERT( !value_compare()( handle.iterator->first, v ) );
+        BOOST_ASSERT( !value_comp()( handle.iterator->first, v ) );
         handle.iterator->first = v;
         decrease( handle );
     }
