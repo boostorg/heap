@@ -31,4 +31,3 @@ explicit
 
 call-if : boost-library heap
     ;
-

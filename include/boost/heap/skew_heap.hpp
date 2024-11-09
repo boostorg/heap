@@ -29,7 +29,7 @@
 #    ifdef BOOST_HEAP_SANITYCHECKS
 #        define BOOST_HEAP_ASSERT BOOST_ASSERT
 #    else
-#        define BOOST_HEAP_ASSERT( expression )
+#        define BOOST_HEAP_ASSERT( expression ) static_assert( true, "force semicolon" )
 #    endif
 #endif
 
@@ -60,7 +60,7 @@ struct parent_holder
 template < typename node_pointer >
 struct parent_holder< node_pointer, false >
 {
-    void set_parent( node_pointer parent )
+    void set_parent( node_pointer /*parent*/ )
     {}
 
     node_pointer get_parent( void ) const

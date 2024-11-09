@@ -685,4 +685,3 @@ jobs:
         run: |
           cd ../boost-root/__build__
           ctest --output-on-failure --no-tests=error -C Release
-

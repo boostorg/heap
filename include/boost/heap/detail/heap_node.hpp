@@ -18,7 +18,7 @@
 #ifdef BOOST_HEAP_SANITYCHECKS
 #    define BOOST_HEAP_ASSERT BOOST_ASSERT
 #else
-#    define BOOST_HEAP_ASSERT( expression )
+#    define BOOST_HEAP_ASSERT( expression ) static_assert( true, "force semicolon" )
 #endif
 
 
@@ -37,7 +37,7 @@ typedef bi::list< heap_node_base< false > > heap_node_list;
 struct nop_disposer
 {
     template < typename T >
-    void operator()( T* n )
+    void operator()( T* )
     {
         BOOST_HEAP_ASSERT( false );
     }

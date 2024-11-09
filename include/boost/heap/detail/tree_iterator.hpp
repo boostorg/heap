@@ -58,7 +58,7 @@ struct pointer_to_reference
 template < typename HandleType, typename Alloc, typename ValueCompare >
 struct unordered_tree_iterator_storage
 {
-    unordered_tree_iterator_storage( ValueCompare const& cmp )
+    unordered_tree_iterator_storage( ValueCompare const& )
     {}
 
     void push( HandleType h )

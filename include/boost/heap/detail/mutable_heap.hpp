@@ -89,6 +89,12 @@ public:
             iterator( rhs.iterator )
         {}
 
+        handle_type& operator=( handle_type const& rhs )
+        {
+            iterator = rhs.iterator;
+            return *this;
+        }
+
         bool operator==( handle_type const& rhs ) const
         {
             return iterator == rhs.iterator;
