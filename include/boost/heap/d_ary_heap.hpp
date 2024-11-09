@@ -19,7 +19,6 @@
 #include <boost/heap/detail/mutable_heap.hpp>
 #include <boost/heap/detail/ordered_adaptor_iterator.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
-#include <boost/mem_fn.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #    pragma once

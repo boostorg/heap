@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <vector>
 
 #include <boost/array.hpp>
 #include <boost/assert.hpp>
