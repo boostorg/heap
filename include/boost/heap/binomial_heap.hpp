@@ -10,6 +10,7 @@
 #define BOOST_HEAP_BINOMIAL_HEAP_HPP
 
 #include <algorithm>
+#include <type_traits>
 #include <utility>
 
 #include <boost/assert.hpp>
@@ -46,7 +47,7 @@ template < typename T, typename Parspec >
 struct make_binomial_heap_base
 {
     static const bool constant_time_size
-        = parameter::binding< Parspec, tag::constant_time_size, boost::true_type >::type::value;
+        = parameter::binding< Parspec, tag::constant_time_size, std::true_type >::type::value;
     typedef typename detail::make_heap_base< T, Parspec, constant_time_size >::type               base_type;
     typedef typename detail::make_heap_base< T, Parspec, constant_time_size >::allocator_argument allocator_argument;
     typedef typename detail::make_heap_base< T, Parspec, constant_time_size >::compare_argument   compare_argument;
@@ -65,7 +66,6 @@ struct make_binomial_heap_base
             allocator_type( alloc )
         {}
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         type( type const& rhs ) :
             base_type( rhs ),
             allocator_type( rhs )
@@ -89,7 +89,6 @@ struct make_binomial_heap_base
             allocator_type::operator=( static_cast< allocator_type const& >( rhs ) );
             return *this;
         }
-#endif
     };
 };
 
@@ -248,20 +247,19 @@ public:
         static_cast< super_t& >( *this ) = rhs;
 
         if ( rhs.empty() )
-            top_element = NULL;
+            top_element = nullptr;
         else
             clone_forest( rhs );
         return *this;
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue &&)
     binomial_heap( binomial_heap&& rhs ) :
         super_t( std::move( rhs ) ),
         top_element( rhs.top_element )
     {
         trees.splice( trees.begin(), rhs.trees );
-        rhs.top_element = NULL;
+        rhs.top_element = nullptr;
     }
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue &&)
@@ -271,10 +269,9 @@ public:
         super_t::operator=( std::move( rhs ) );
         trees.splice( trees.begin(), rhs.trees );
         top_element     = rhs.top_element;
-        rhs.top_element = NULL;
+        rhs.top_element = nullptr;
         return *this;
     }
-#endif
 
     ~binomial_heap( void )
     {
@@ -284,7 +281,7 @@ public:
     /// \copydoc boost::heap::priority_queue::empty
     bool empty( void ) const
     {
-        return top_element == NULL;
+        return top_element == nullptr;
     }
 
     /**
@@ -318,7 +315,7 @@ public:
         trees.clear_and_dispose( disposer( *this ) );
 
         size_holder::set_size( 0 );
-        top_element = NULL;
+        top_element = nullptr;
     }
 
     /// \copydoc boost::heap::priority_queue::get_allocator
@@ -364,7 +361,6 @@ public:
         return handle_type( n );
     }
 
-#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES ) && !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES )
     /**
      * \b Effects: Adds a new element to the priority queue. The element is directly constructed in-place. Returns
      * handle to element.
@@ -387,7 +383,6 @@ public:
         sanity_check();
         return handle_type( n );
     }
-#endif
 
     /**
      * \b Effects: Removes the top element from the priority queue.
@@ -421,7 +416,7 @@ public:
         }
 
         if ( trees.empty() )
-            top_element = NULL;
+            top_element = nullptr;
         else
             update_top_element();
 
@@ -546,7 +541,7 @@ public:
 
         size_holder::set_size( new_size );
         rhs.set_size( 0 );
-        rhs.top_element = NULL;
+        rhs.top_element = nullptr;
 
         super_t::set_stability_count( ( std::max )( super_t::get_stability_count(), rhs.get_stability_count() ) );
         rhs.set_stability_count( 0 );
@@ -574,7 +569,7 @@ public:
     /// \copydoc boost::heap::fibonacci_heap::ordered_end
     ordered_iterator ordered_end( void ) const
     {
-        return ordered_iterator( NULL, super_t::value_comp() );
+        return ordered_iterator( nullptr, super_t::value_comp() );
     }
 
     /**
@@ -653,7 +648,7 @@ private:
         BOOST_HEAP_ASSERT( !rhs.empty() );
 
         node_list_iterator this_iterator = trees.begin();
-        node_pointer       carry_node    = NULL;
+        node_pointer       carry_node    = nullptr;
 
         while ( !rhs.trees.empty() ) {
             node_pointer rhs_node   = static_cast< node_pointer >( &rhs.trees.front() );
@@ -672,7 +667,7 @@ try_again:
                 if ( carry_node ) {
                     if ( carry_node->child_count() < this_degree ) {
                         trees.insert( this_iterator, *carry_node );
-                        carry_node = NULL;
+                        carry_node = nullptr;
                     } else {
                         rhs.trees.pop_front();
                         carry_node = merge_trees( carry_node, rhs_node );
@@ -694,7 +689,7 @@ try_again:
                 if ( carry_node ) {
                     if ( carry_node->child_count() < this_degree ) {
                         trees.insert( this_iterator, *carry_node );
-                        carry_node = NULL;
+                        carry_node = nullptr;
                         ++this_iterator;
                     } else if ( carry_node->child_count() == rhs_degree ) {
                         rhs.trees.pop_front();
@@ -724,7 +719,7 @@ try_again:
                     if ( carry_node->child_count() < rhs_degree ) {
                         trees.insert( this_iterator, *carry_node );
                         trees.insert( this_iterator, *rhs_node );
-                        carry_node = NULL;
+                        carry_node = nullptr;
                     } else
                         carry_node = merge_trees( rhs_node, carry_node );
                 } else
@@ -759,7 +754,7 @@ try_again:
     {
         BOOST_HEAP_ASSERT( trees.empty() );
         typedef typename node_type::template node_cloner< allocator_type > node_cloner;
-        trees.clone_from( rhs.trees, node_cloner( *this, NULL ), detail::nop_disposer() );
+        trees.clone_from( rhs.trees, node_cloner( *this, nullptr ), detail::nop_disposer() );
 
         update_top_element();
     }
@@ -860,11 +855,11 @@ try_again:
         if ( size )
             top_element = static_cast< node_pointer >( &*child_list.begin() ); // not correct, but we will reset it later
         else
-            top_element = NULL;
+            top_element = nullptr;
 
         for ( node_list_iterator it = child_list.begin(); it != child_list.end(); ++it ) {
             node_pointer n = static_cast< node_pointer >( &*it );
-            n->parent      = NULL;
+            n->parent      = nullptr;
         }
 
         trees.splice( trees.end(), child_list, child_list.begin(), child_list.end() );

@@ -55,7 +55,7 @@ struct heap_equivalence_copy
         BOOST_CONCEPT_ASSERT( (boost::heap::PriorityQueue< Heap2 >));
 
         // if this assertion is triggered, the value_compare types are incompatible
-        BOOST_STATIC_ASSERT( ( boost::is_same< typename Heap1::value_compare, typename Heap2::value_compare >::value ) );
+        BOOST_STATIC_ASSERT( ( std::is_same< typename Heap1::value_compare, typename Heap2::value_compare >::value ) );
 
         if ( Heap1::constant_time_size && Heap2::constant_time_size )
             if ( lhs.size() != rhs.size() )
@@ -96,7 +96,7 @@ struct heap_equivalence_iteration
         BOOST_CONCEPT_ASSERT( (boost::heap::PriorityQueue< Heap2 >));
 
         // if this assertion is triggered, the value_compare types are incompatible
-        BOOST_STATIC_ASSERT( ( boost::is_same< typename Heap1::value_compare, typename Heap2::value_compare >::value ) );
+        BOOST_STATIC_ASSERT( ( std::is_same< typename Heap1::value_compare, typename Heap2::value_compare >::value ) );
 
         if ( Heap1::constant_time_size && Heap2::constant_time_size )
             if ( lhs.size() != rhs.size() )
@@ -131,7 +131,7 @@ bool heap_equality( Heap1 const& lhs, Heap2 const& rhs )
 {
     const bool use_ordered_iterators = Heap1::has_ordered_iterators && Heap2::has_ordered_iterators;
 
-    typedef typename boost::conditional< use_ordered_iterators, heap_equivalence_iteration, heap_equivalence_copy >::type
+    typedef typename std::conditional< use_ordered_iterators, heap_equivalence_iteration, heap_equivalence_copy >::type
         equivalence_check;
 
     equivalence_check eq_check;
@@ -213,7 +213,7 @@ bool heap_compare( Heap1 const& lhs, Heap2 const& rhs )
     const bool use_ordered_iterators = Heap1::has_ordered_iterators && Heap2::has_ordered_iterators;
 
     typedef
-        typename boost::conditional< use_ordered_iterators, heap_compare_iteration, heap_compare_copy >::type compare_check;
+        typename std::conditional< use_ordered_iterators, heap_compare_iteration, heap_compare_copy >::type compare_check;
 
     compare_check check_object;
     return check_object( lhs, rhs );

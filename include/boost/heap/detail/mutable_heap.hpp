@@ -159,7 +159,6 @@ protected:
         return *this;
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     priority_queue_mutable_wrapper( priority_queue_mutable_wrapper&& rhs ) :
         q_( std::move( rhs.q_ ) )
     {
@@ -174,8 +173,6 @@ protected:
         std::swap( objects, rhs.objects );
         return *this;
     }
-#endif
-
 
 public:
     template < typename iterator_type >
@@ -235,7 +232,7 @@ public:
         ordered_iterator( void ) :
             adaptor_type( 0 ),
             unvisited_nodes( indirect_cmp() ),
-            q_( NULL )
+            q_( nullptr )
         {}
 
         ordered_iterator( const priority_queue_mutable_wrapper* q, indirect_cmp const& cmp ) :
@@ -354,7 +351,6 @@ public:
         return handle_type( ret );
     }
 
-#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES ) && !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES )
     template < class... Args >
     handle_type emplace( Args&&... args )
     {
@@ -363,7 +359,6 @@ public:
         q_.push( ret );
         return handle_type( ret );
     }
-#endif
 
     void pop( void )
     {

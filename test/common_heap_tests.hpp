@@ -78,7 +78,6 @@ void fill_q( pri_queue& q, data_container const& data )
         q.push( data[ i ] );
 }
 
-#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES ) && !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES )
 template < typename pri_queue, typename data_container >
 void fill_emplace_q( pri_queue& q, data_container const& data )
 {
@@ -87,7 +86,6 @@ void fill_emplace_q( pri_queue& q, data_container const& data )
         q.emplace( std::move( value ) );
     }
 }
-#endif
 
 template < typename pri_queue >
 void pri_queue_test_sequential_push( void )
@@ -116,7 +114,6 @@ void pri_queue_test_sequential_reverse_push( void )
 template < typename pri_queue >
 void pri_queue_test_emplace( void )
 {
-#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES ) && !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES )
     for ( int i = 0; i != test_size; ++i ) {
         pri_queue q;
         test_data data = make_test_data( i );
@@ -125,7 +122,6 @@ void pri_queue_test_emplace( void )
         std::reverse( data.begin(), data.end() );
         check_q( q, data );
     }
-#endif
 }
 
 
@@ -177,7 +173,6 @@ void pri_queue_test_assignment( void )
 template < typename pri_queue >
 void pri_queue_test_moveconstructor( void )
 {
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     pri_queue q;
     test_data data = make_test_data( test_size );
     fill_q( q, data );
@@ -186,13 +181,11 @@ void pri_queue_test_moveconstructor( void )
 
     check_q( r, data );
     BOOST_REQUIRE( q.empty() );
-#endif
 }
 
 template < typename pri_queue >
 void pri_queue_test_move_assignment( void )
 {
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     pri_queue q;
     test_data data = make_test_data( test_size );
     fill_q( q, data );
@@ -202,7 +195,6 @@ void pri_queue_test_move_assignment( void )
 
     check_q( r, data );
     BOOST_REQUIRE( q.empty() );
-#endif
 }
 
 
@@ -475,8 +467,6 @@ struct less_with_T
 };
 
 
-#if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES ) && !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES )
-
 class thing
 {
 public:
@@ -505,18 +495,14 @@ public:
     }
 };
 
-#    define RUN_EMPLACE_TEST( HEAP_TYPE )                                                                                \
-        do {                                                                                                             \
-            cmpthings                                                          ord;                                      \
-            boost::heap::HEAP_TYPE< thing, boost::heap::compare< cmpthings > > vpq( ord );                               \
-            vpq.emplace( 5, 6, 7 );                                                                                      \
-            boost::heap::HEAP_TYPE< thing, boost::heap::compare< cmpthings >, boost::heap::stable< true > > vpq2( ord ); \
-            vpq2.emplace( 5, 6, 7 );                                                                                     \
-        } while ( 0 );
-
-#else
-#    define RUN_EMPLACE_TEST( HEAP_TYPE )
-#endif
+#define RUN_EMPLACE_TEST( HEAP_TYPE )                                                                                \
+    do {                                                                                                             \
+        cmpthings                                                          ord;                                      \
+        boost::heap::HEAP_TYPE< thing, boost::heap::compare< cmpthings > > vpq( ord );                               \
+        vpq.emplace( 5, 6, 7 );                                                                                      \
+        boost::heap::HEAP_TYPE< thing, boost::heap::compare< cmpthings >, boost::heap::stable< true > > vpq2( ord ); \
+        vpq2.emplace( 5, 6, 7 );                                                                                     \
+    } while ( 0 );
 
 
 #endif // COMMON_HEAP_TESTS_HPP_INCLUDED
