@@ -26,6 +26,7 @@ namespace boost { namespace heap { namespace detail {
 template < typename Heap1, typename Heap2 >
 bool value_equality( Heap1 const& lhs, Heap2 const& rhs, typename Heap1::value_type lval, typename Heap2::value_type rval )
 {
+    (void)rhs;
     typename Heap1::value_compare const& cmp = lhs.value_comp();
     bool                                 ret = !( cmp( lval, rval ) ) && !( cmp( rval, lval ) );
 
@@ -38,6 +39,7 @@ bool value_equality( Heap1 const& lhs, Heap2 const& rhs, typename Heap1::value_t
 template < typename Heap1, typename Heap2 >
 bool value_compare( Heap1 const& lhs, Heap2 const& rhs, typename Heap1::value_type lval, typename Heap2::value_type rval )
 {
+    (void)rhs;
     typename Heap1::value_compare const& cmp = lhs.value_comp();
     bool                                 ret = cmp( lval, rval );
 
