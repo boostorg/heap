@@ -19,7 +19,7 @@ add_library(Boost::heap ALIAS boost_heap)
 
 target_include_directories(boost_heap INTERFACE include)
 target_compile_features(boost_heap INTERFACE cxx_std_14)
-set_target_properties( boost_heap PROPERTIES CMAKE_CXX_STANDARD_REQUIRED 14)
+set_target_properties( boost_heap PROPERTIES CXX_STANDARD_REQUIRED 14)
 
 target_link_libraries(boost_heap
   INTERFACE
