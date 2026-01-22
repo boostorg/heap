@@ -30,7 +30,6 @@ target_link_libraries(boost_heap
     Boost::intrusive
     Boost::iterator
     Boost::parameter
-    Boost::static_assert
     Boost::throw_exception
 )
 
