@@ -459,8 +459,13 @@ public:
                 increase( handle );
             else
                 decrease( handle );
-        } else
-            decrease( handle );
+        } else {
+            // Node is a root: it has no parent to compare with.  The heap order below
+            // it may have changed in either direction, so sift it down to restore order,
+            // then re-scan for the new top element.
+            siftdown( this_node );
+            update_top_element();
+        }
     }
 
     /**

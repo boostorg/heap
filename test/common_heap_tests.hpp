@@ -504,5 +504,173 @@ public:
         vpq2.emplace( 5, 6, 7 );                                                                                     \
     } while ( 0 );
 
+template < typename pri_queue >
+void pri_queue_test_equality_same( void )
+{
+    // Two separately populated heaps with the same elements must compare equal
+    // and must NOT satisfy operator<.
+    for ( int i = 0; i != test_size; ++i ) {
+        pri_queue q, r;
+        test_data data = make_test_data( i );
+        fill_q( q, data );
+        fill_q( r, data );
+
+        BOOST_REQUIRE( q == r );
+        BOOST_REQUIRE( !( q < r ) );
+        BOOST_REQUIRE( !( r < q ) );
+        BOOST_REQUIRE( q >= r );
+        BOOST_REQUIRE( q <= r );
+    }
+}
+
+template < typename pri_queue >
+void pri_queue_test_less_not_reflexive( void )
+{
+    pri_queue q;
+    test_data data = make_test_data( test_size );
+    fill_q( q, data );
+
+    BOOST_REQUIRE( !( q < q ) );
+    BOOST_REQUIRE( q >= q );
+    BOOST_REQUIRE( q <= q );
+}
+
+template < typename pri_queue >
+void pri_queue_test_empty_comparisons( void )
+{
+    pri_queue empty1, empty2;
+
+    BOOST_REQUIRE( empty1 == empty2 );
+    BOOST_REQUIRE( !( empty1 != empty2 ) );
+    BOOST_REQUIRE( !( empty1 < empty2 ) );
+    BOOST_REQUIRE( !( empty2 < empty1 ) );
+
+    // Non-empty > empty
+    pri_queue nonempty;
+    nonempty.push( 42 );
+    BOOST_REQUIRE( empty1 < nonempty );
+    BOOST_REQUIRE( !( nonempty < empty1 ) );
+    BOOST_REQUIRE( nonempty != empty1 );
+}
+
+template < typename pri_queue >
+void pri_queue_test_duplicate_values( void )
+{
+    pri_queue q;
+    const int val   = 7;
+    const int count = 16;
+    for ( int i = 0; i < count; ++i )
+        q.push( val );
+
+    BOOST_REQUIRE_EQUAL( q.size(), (typename pri_queue::size_type)count );
+    BOOST_REQUIRE_EQUAL( q.top(), val );
+
+    for ( int i = 0; i < count; ++i ) {
+        BOOST_REQUIRE_EQUAL( q.top(), val );
+        q.pop();
+    }
+    BOOST_REQUIRE( q.empty() );
+}
+
+template < typename pri_queue >
+void pri_queue_test_single_element( void )
+{
+    pri_queue q;
+    q.push( 99 );
+    BOOST_REQUIRE( !q.empty() );
+    BOOST_REQUIRE_EQUAL( q.size(), 1u );
+    BOOST_REQUIRE_EQUAL( q.top(), 99 );
+    q.pop();
+    BOOST_REQUIRE( q.empty() );
+    BOOST_REQUIRE_EQUAL( q.size(), 0u );
+}
+
+template < typename pri_queue >
+void pri_queue_test_self_assignment( void )
+{
+    for ( int i = 1; i != test_size; ++i ) {
+        pri_queue q;
+        test_data data = make_test_data( i );
+        fill_q( q, data );
+
+        pri_queue& ref = q;
+        ref            = q; // self-assignment
+
+        check_q( q, data );
+    }
+}
+
+template < typename pri_queue >
+void pri_queue_test_clear_and_reuse( void )
+{
+    pri_queue q;
+    test_data data = make_test_data( test_size );
+    fill_q( q, data );
+    q.clear();
+    BOOST_REQUIRE( q.empty() );
+    BOOST_REQUIRE_EQUAL( q.size(), 0u );
+
+    // Re-fill and verify
+    fill_q( q, data );
+    check_q( q, data );
+}
+
+template < typename pri_queue >
+void pri_queue_test_ordered_iterator_empty( void )
+{
+    pri_queue q;
+    BOOST_REQUIRE( q.ordered_begin() == q.ordered_end() );
+    BOOST_REQUIRE_EQUAL( std::distance( q.ordered_begin(), q.ordered_end() ), 0 );
+}
+
+template < typename pri_queue >
+void pri_queue_test_interleaved_push_pop( void )
+{
+    pri_queue q;
+    // Push 0..N-1
+    for ( int i = 0; i < test_size; ++i )
+        q.push( i );
+
+    // Interleave: pop the current top, then push a new value.
+    // After each pop, verify that what we popped was indeed the top (heap invariant).
+    for ( int i = 0; i < test_size; ++i ) {
+        BOOST_REQUIRE( !q.empty() );
+        int expected_top = q.top();
+        int v            = q.top();
+        q.pop();
+        // The value we got must equal what top() reported before the pop
+        BOOST_REQUIRE_EQUAL( v, expected_top );
+        // push a new value (could be larger or smaller — doesn't matter for the invariant)
+        q.push( test_size + i );
+    }
+    // Drain: verify popped values are in non-increasing order (max-heap invariant)
+    int prev = std::numeric_limits< int >::max();
+    while ( !q.empty() ) {
+        int v = q.top();
+        q.pop();
+        BOOST_REQUIRE( v <= prev );
+        prev = v;
+    }
+}
+
+template < typename pri_queue >
+void run_common_edge_case_tests( void )
+{
+    pri_queue_test_equality_same< pri_queue >();
+    pri_queue_test_less_not_reflexive< pri_queue >();
+    pri_queue_test_empty_comparisons< pri_queue >();
+    pri_queue_test_duplicate_values< pri_queue >();
+    pri_queue_test_single_element< pri_queue >();
+    pri_queue_test_self_assignment< pri_queue >();
+    pri_queue_test_clear_and_reuse< pri_queue >();
+    pri_queue_test_interleaved_push_pop< pri_queue >();
+}
+
+template < typename pri_queue >
+void run_ordered_iterator_edge_case_tests( void )
+{
+    pri_queue_test_ordered_iterator_empty< pri_queue >();
+}
+
 
 #endif // COMMON_HEAP_TESTS_HPP_INCLUDED

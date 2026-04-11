@@ -279,8 +279,7 @@ public:
 
     ~pairing_heap( void )
     {
-        while ( !empty() )
-            pop();
+        clear();
     }
 
     /// \copydoc boost::heap::priority_queue::empty
@@ -430,14 +429,28 @@ public:
      * */
     void update( handle_type handle )
     {
-        node_pointer n = handle.node_;
+        node_pointer n       = handle.node_;
+        bool         is_root = ( n == root );
 
         n->unlink();
-        if ( !n->children.empty() )
-            n = merge_nodes( n, merge_node_list( n->children ) );
 
-        if ( n != root )
-            merge_node( n );
+        if ( !n->children.empty() ) {
+            node_pointer merged_children = merge_node_list( n->children );
+            if ( is_root ) {
+                // Root was removed; its merged children become the new tentative root.
+                // Re-insert n by merging it with the children subtree.
+                root    = merged_children;
+                is_root = false; // n is no longer the root after re-inserting below
+            } else {
+                merge_node( merged_children );
+            }
+        } else if ( is_root ) {
+            // Root had no children; heap is now empty until n is re-inserted.
+            root    = nullptr;
+            is_root = false;
+        }
+
+        merge_node( n );
     }
 
     /**
