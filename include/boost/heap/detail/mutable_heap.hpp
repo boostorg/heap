@@ -229,25 +229,55 @@ public:
 
         typedef const_list_iterator                          iterator;
         typedef typename q_type::ordered_iterator_dispatcher ordered_iterator_dispatcher;
+        typedef typename q_type::internal_compare            internal_compare_type;
+
+        // Comparator for unvisited_nodes that respects stability by comparing internal values
+        // (which includes stability counters for stable heaps)
+        struct compare_by_internal_value : public internal_compare_type
+        {
+            const q_type* q;
+
+            compare_by_internal_value( const q_type*                q_ptr = nullptr,
+                                       internal_compare_type const& cmp   = internal_compare_type() ) :
+                internal_compare_type( cmp ),
+                q( q_ptr )
+            {}
+
+            bool operator()( const_list_iterator const& lhs, const_list_iterator const& rhs ) const
+            {
+                if ( q == nullptr )
+                    return false; // arbitrary for null case
+
+                size_type lhs_index = lhs->second;
+                size_type rhs_index = rhs->second;
+
+                typename q_type::internal_type const& lhs_internal
+                    = ordered_iterator_dispatcher::get_internal_value( q, lhs_index );
+                typename q_type::internal_type const& rhs_internal
+                    = ordered_iterator_dispatcher::get_internal_value( q, rhs_index );
+
+                return internal_compare_type::operator()( lhs_internal, rhs_internal );
+            }
+        };
 
         friend class boost::iterator_core_access;
 
     public:
         ordered_iterator( void ) :
             adaptor_type( 0 ),
-            unvisited_nodes( indirect_cmp() ),
+            unvisited_nodes( compare_by_internal_value() ),
             q_( nullptr )
         {}
 
         ordered_iterator( const priority_queue_mutable_wrapper* q, indirect_cmp const& cmp ) :
             adaptor_type( 0 ),
-            unvisited_nodes( cmp ),
+            unvisited_nodes( compare_by_internal_value( &( q->q_ ), q->q_.get_internal_cmp() ) ),
             q_( q )
         {}
 
         ordered_iterator( const_list_iterator it, const priority_queue_mutable_wrapper* q, indirect_cmp const& cmp ) :
             adaptor_type( it ),
-            unvisited_nodes( cmp ),
+            unvisited_nodes( compare_by_internal_value( &( q->q_ ), q->q_.get_internal_cmp() ) ),
             q_( q )
         {
             if ( it != q->objects.end() )
@@ -304,7 +334,7 @@ public:
 
         std::priority_queue< iterator,
                              std::vector< iterator, typename boost::allocator_rebind< allocator_type, iterator >::type >,
-                             indirect_cmp >
+                             compare_by_internal_value >
                                               unvisited_nodes;
         const priority_queue_mutable_wrapper* q_;
     };
