@@ -20,7 +20,7 @@
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_log.hpp>
 
 #include <boost/heap/heap_concepts.hpp>
