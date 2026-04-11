@@ -402,7 +402,7 @@ public:
         size_holder::decrement();
 
         if ( element->child_count() ) {
-            size_type sz = ( 1 << element->child_count() ) - 1;
+            size_type sz = ( size_type( 1 ) << element->child_count() ) - 1;
 
             binomial_heap children( value_comp(), element->children, sz );
             if ( trees.empty() ) {
