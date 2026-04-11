@@ -371,6 +371,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const & rhs)
     skew_heap& operator=( skew_heap const& rhs )
     {
+        if ( this == &rhs )
+            return *this;
         clear();
         size_holder::set_size( rhs.get_size() );
         static_cast< super_t& >( *this ) = rhs;
