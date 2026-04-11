@@ -343,6 +343,6 @@ public:
 };
 
 
-}}}    // namespace boost::heap::detail
+}}} // namespace boost::heap::detail
 
 #endif /* BOOST_HEAP_DETAIL_TREE_ITERATOR_HPP */

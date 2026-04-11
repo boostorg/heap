@@ -101,6 +101,6 @@ struct MutablePriorityQueue : PriorityQueue< C >
     bool equal, not_equal;
 };
 
-}}     // namespace boost::heap
+}} // namespace boost::heap
 
 #endif /* BOOST_HEAP_CONCEPTS_HPP */

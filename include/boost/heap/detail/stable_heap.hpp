@@ -563,6 +563,6 @@ struct extract_allocator_types
 };
 
 
-}}}    // namespace boost::heap::detail
+}}} // namespace boost::heap::detail
 
 #endif /* BOOST_HEAP_DETAIL_STABLE_HEAP_HPP */

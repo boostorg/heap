@@ -345,7 +345,7 @@ private:
     size_type last_child_index( size_type index ) const
     {
         const size_t    first_index = first_child_index( index );
-        const size_type last_index  = ( std::min )( first_index + D - 1, size() - 1 );
+        const size_type last_index  = (std::min)( first_index + D - 1, size() - 1 );
 
         return last_index;
     }

@@ -409,6 +409,6 @@ public:
     }
 };
 
-}}     // namespace boost::heap
+}} // namespace boost::heap
 
 #endif /* BOOST_HEAP_PRIORITY_QUEUE_HPP */
