@@ -38,6 +38,7 @@ set(Tests
     priority_queue_test
     skew_heap_test
     mutable_heap_test
+    move_only_types_test
 )
 
 foreach(Test ${Tests})

@@ -86,7 +86,7 @@ struct skew_heap_node : parent_holder< skew_heap_node< value_type, store_parent_
     }
 
     skew_heap_node( value_type&& v ) :
-        value( v )
+        value( std::move( v ) )
     {
         children.fill( 0 );
     }
