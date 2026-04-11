@@ -701,8 +701,13 @@ private:
         if ( roots.empty() )
             return;
 
-        static const size_type               max_log2 = sizeof( size_type ) * 8;
-        std::array< node_pointer, max_log2 > aux {};
+        // The maximum degree of any node in a Fibonacci heap with N elements is
+        // floor(log_phi(N)) where phi = (1+sqrt(5))/2 ~ 1.618.  Since
+        // log_phi(N) < 1.4405 * log2(N), a safe upper bound on the degree for a
+        // size_type of B bits is ceil(1.4405 * B) + 2.  We compute a conservative
+        // compile-time constant that is always large enough.
+        constexpr size_type                    max_degree = sizeof( size_type ) * 12 + 4;
+        std::array< node_pointer, max_degree > aux {};
 
         node_list_iterator it = roots.begin();
         top_element           = static_cast< node_pointer >( &*it );
@@ -711,6 +716,7 @@ private:
             node_pointer n = static_cast< node_pointer >( &*it );
             ++it;
             size_type node_rank = n->child_count();
+            BOOST_ASSERT( node_rank < max_degree );
 
             if ( aux[ node_rank ] == nullptr )
                 aux[ node_rank ] = n;
@@ -731,6 +737,7 @@ private:
 
                     aux[ node_rank ] = nullptr;
                     node_rank        = n->child_count();
+                    BOOST_ASSERT( node_rank < max_degree );
                 } while ( aux[ node_rank ] != nullptr );
                 aux[ node_rank ] = n;
             }
