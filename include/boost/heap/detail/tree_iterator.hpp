@@ -88,7 +88,7 @@ struct unordered_tree_iterator_storage
 template < typename ValueType, typename HandleType, typename Alloc, typename ValueCompare, typename ValueExtractor >
 struct ordered_tree_iterator_storage : ValueExtractor
 {
-    struct compare_values_by_handle : ValueExtractor, ValueCompare
+    struct compare_values_by_handle : ValueCompare
     {
         compare_values_by_handle( ValueCompare const& cmp ) :
             ValueCompare( cmp )
@@ -96,9 +96,7 @@ struct ordered_tree_iterator_storage : ValueExtractor
 
         bool operator()( HandleType const& lhs, HandleType const& rhs ) const
         {
-            ValueType const& lhs_value = ValueExtractor::operator()( lhs->value );
-            ValueType const& rhs_value = ValueExtractor::operator()( rhs->value );
-            return ValueCompare::operator()( lhs_value, rhs_value );
+            return ValueCompare::operator()( lhs->value, rhs->value );
         }
     };
 

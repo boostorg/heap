@@ -176,7 +176,7 @@ private:
                                        detail::list_iterator_converter< node, node_list_type >,
                                        true,
                                        true,
-                                       value_compare >
+                                       internal_compare >
             ordered_iterator;
     };
 
@@ -562,7 +562,7 @@ public:
      * */
     ordered_iterator ordered_begin( void ) const
     {
-        return ordered_iterator( roots.begin(), roots.end(), top_element, super_t::value_comp() );
+        return ordered_iterator( roots.begin(), roots.end(), top_element, super_t::get_internal_cmp() );
     }
 
     /**
@@ -572,7 +572,7 @@ public:
      * */
     ordered_iterator ordered_end( void ) const
     {
-        return ordered_iterator( nullptr, super_t::value_comp() );
+        return ordered_iterator( nullptr, super_t::get_internal_cmp() );
     }
 
     /**

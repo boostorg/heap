@@ -305,9 +305,15 @@ class skew_heap :
 
         typedef iterator const_iterator;
 
-        typedef detail::
-            tree_iterator< node, const value_type, allocator_type, value_extractor, detail::dereferencer< node >, true, true, value_compare >
-                ordered_iterator;
+        typedef detail::tree_iterator< node,
+                                       const value_type,
+                                       allocator_type,
+                                       value_extractor,
+                                       detail::dereferencer< node >,
+                                       true,
+                                       true,
+                                       typename super_t::internal_compare >
+            ordered_iterator;
 
         typedef typename detail::extract_allocator_types< typename base_maker::allocator_argument >::reference reference;
         typedef detail::node_handle< node_pointer, super_t, reference > handle_type;
@@ -529,13 +535,13 @@ public:
     /// \copydoc boost::heap::fibonacci_heap::ordered_begin
     ordered_iterator ordered_begin( void ) const
     {
-        return ordered_iterator( root, super_t::value_comp() );
+        return ordered_iterator( root, super_t::get_internal_cmp() );
     }
 
     /// \copydoc boost::heap::fibonacci_heap::ordered_begin
     ordered_iterator ordered_end( void ) const
     {
-        return ordered_iterator( 0, super_t::value_comp() );
+        return ordered_iterator( 0, super_t::get_internal_cmp() );
     }
 
     /**

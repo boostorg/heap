@@ -184,7 +184,7 @@ private:
                                        detail::pointer_to_reference< node >,
                                        false,
                                        true,
-                                       value_compare >
+                                       typename super_t::internal_compare >
             ordered_iterator;
     };
 
@@ -562,13 +562,13 @@ public:
     /// \copydoc boost::heap::fibonacci_heap::ordered_begin
     ordered_iterator ordered_begin( void ) const
     {
-        return ordered_iterator( root, super_t::value_comp() );
+        return ordered_iterator( root, super_t::get_internal_cmp() );
     }
 
     /// \copydoc boost::heap::fibonacci_heap::ordered_begin
     ordered_iterator ordered_end( void ) const
     {
-        return ordered_iterator( nullptr, super_t::value_comp() );
+        return ordered_iterator( nullptr, super_t::get_internal_cmp() );
     }
 
 

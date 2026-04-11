@@ -54,9 +54,56 @@ auto& get_rng()
     return rng;
 }
 
+template < typename T, typename = void >
+struct has_ordered_iterators : std::false_type
+{};
+
+template < typename T >
+struct has_ordered_iterators<
+    T,
+    boost::void_t< decltype( std::declval< T >().ordered_begin() ), decltype( std::declval< T >().ordered_end() ) > > :
+    std::true_type
+{};
+
+template < typename T >
+using has_ordered_iterators_t = typename has_ordered_iterators< T >::type;
+
+template < typename T >
+using enable_if_has_ordered_iterators_t = typename std::enable_if< has_ordered_iterators< T >::value >::type;
+template < typename T >
+using disable_if_has_ordered_iterators_t = typename std::enable_if< !has_ordered_iterators< T >::value >::type;
+
+
+template < typename pri_queue, typename data_container >
+enable_if_has_ordered_iterators_t< pri_queue > check_q_via_ordered_iterators( pri_queue const&      q,
+                                                                              data_container const& expected )
+{
+    auto x = q.ordered_begin();
+    auto y = q.ordered_end();
+
+    auto a = expected.rbegin();
+    auto b = expected.rend();
+
+    for ( unsigned int i = 0; i != expected.size(); ++i ) {
+        assert( x != y );
+        BOOST_REQUIRE( x != y );
+        assert( a != b );
+        BOOST_REQUIRE( a != b );
+        BOOST_REQUIRE_EQUAL( *x, *a );
+        ++x;
+        ++a;
+    }
+}
+
+template < typename pri_queue, typename data_container >
+disable_if_has_ordered_iterators_t< pri_queue > check_q_via_ordered_iterators( pri_queue const&, data_container const& )
+{}
+
 template < typename pri_queue, typename data_container >
 void check_q( pri_queue& q, data_container const& expected )
 {
+    check_q_via_ordered_iterators< pri_queue >( q, expected );
+
     assert( q.size() == expected.size() );
     BOOST_REQUIRE_EQUAL( q.size(), expected.size() );
 
