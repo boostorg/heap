@@ -14,6 +14,7 @@
 
 #include <boost/core/allocator_access.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/type_traits/conditional.hpp>
 #include <queue>
 
