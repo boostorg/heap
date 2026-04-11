@@ -556,7 +556,7 @@ public:
         rhs.root = nullptr;
         sanity_check();
 
-        super_t::set_stability_count( ( std::max )( super_t::get_stability_count(), rhs.get_stability_count() ) );
+        super_t::set_stability_count( (std::max)( super_t::get_stability_count(), rhs.get_stability_count() ) );
         rhs.set_stability_count( 0 );
     }
 
