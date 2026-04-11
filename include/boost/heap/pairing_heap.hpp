@@ -267,6 +267,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const & rhs)
     pairing_heap& operator=( pairing_heap const& rhs )
     {
+        if ( this == &rhs )
+            return *this;
         clear();
         size_holder::set_size( rhs.get_size() );
         static_cast< super_t& >( *this ) = rhs;

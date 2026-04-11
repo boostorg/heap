@@ -260,6 +260,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const &)
     fibonacci_heap& operator=( fibonacci_heap const& rhs )
     {
+        if ( this == &rhs )
+            return *this;
         clear();
         size_holder::set_size( rhs.size() );
         static_cast< super_t& >( *this ) = rhs;
