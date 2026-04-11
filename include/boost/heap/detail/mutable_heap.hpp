@@ -145,6 +145,10 @@ protected:
         q_( rhs.q_ ),
         objects( rhs.objects )
     {
+        // q_ was copy-constructed from rhs.q_, which holds iterators into rhs.objects (now
+        // dangling after we copied objects into our own list).  Clear q_ and rebuild it from
+        // our own objects list so that every iterator points into this->objects.
+        q_.clear();
         for ( typename object_list::iterator it = objects.begin(); it != objects.end(); ++it )
             q_.push( it );
     }
