@@ -144,14 +144,8 @@ struct size_holder< false, SizeType >
     {}
 };
 
-// note: MSVC does not implement lookup correctly, we therefore have to place the Cmp object as member inside the
-//       struct. of course, this prevents EBO and significantly reduces the readability of this code
 template < typename T, typename Cmp, bool constant_time_size, typename StabilityCounterType = boost::uintmax_t, bool stable = false >
-struct heap_base :
-#ifndef BOOST_MSVC
-    Cmp,
-#endif
-    size_holder< constant_time_size, size_t >
+struct heap_base : Cmp, size_holder< constant_time_size, size_t >
 {
     typedef StabilityCounterType                      stability_counter_type;
     typedef T                                         value_type;
@@ -161,38 +155,18 @@ struct heap_base :
     typedef Cmp                                       internal_compare;
     static const bool                                 is_stable = stable;
 
-#ifdef BOOST_MSVC
-    Cmp cmp_;
-#endif
-
     heap_base( Cmp const& cmp = Cmp() ) :
-#ifndef BOOST_MSVC
         Cmp( cmp )
-#else
-        cmp_( cmp )
-#endif
     {}
 
     heap_base( heap_base&& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value ) :
-#ifndef BOOST_MSVC
         Cmp( std::move( static_cast< Cmp& >( rhs ) ) ),
-#endif
         size_holder_type( std::move( static_cast< size_holder_type& >( rhs ) ) )
-#ifdef BOOST_MSVC
-        ,
-        cmp_( std::move( rhs.cmp_ ) )
-#endif
     {}
 
     heap_base( heap_base const& rhs ) :
-#ifndef BOOST_MSVC
         Cmp( static_cast< Cmp const& >( rhs ) ),
-#endif
         size_holder_type( static_cast< size_holder_type const& >( rhs ) )
-#ifdef BOOST_MSVC
-        ,
-        cmp_( rhs.value_comp() )
-#endif
     {}
 
     heap_base& operator=( heap_base&& rhs ) noexcept( std::is_nothrow_move_assignable< Cmp >::value )
@@ -242,11 +216,7 @@ struct heap_base :
 
     Cmp const& value_comp( void ) const noexcept
     {
-#ifndef BOOST_MSVC
         return *this;
-#else
-        return cmp_;
-#endif
     }
 
     Cmp const& get_internal_cmp( void ) const noexcept
@@ -275,20 +245,14 @@ struct heap_base :
 private:
     Cmp& value_comp_ref( void )
     {
-#ifndef BOOST_MSVC
         return *this;
-#else
-        return cmp_;
-#endif
     }
 };
 
 
 template < typename T, typename Cmp, bool constant_time_size, typename StabilityCounterType >
 struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
-#ifndef BOOST_MSVC
     Cmp,
-#endif
     size_holder< constant_time_size, size_t >
 {
     typedef StabilityCounterType stability_counter_type;
@@ -314,25 +278,13 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
     typedef size_holder< constant_time_size, size_t > size_holder_type;
     typedef Cmp                                       value_compare;
 
-#ifdef BOOST_MSVC
-    Cmp cmp_;
-#endif
-
     heap_base( Cmp const& cmp = Cmp() ) :
-#ifndef BOOST_MSVC
         Cmp( cmp ),
-#else
-        cmp_( cmp ),
-#endif
         counter_( 0 )
     {}
 
     heap_base( heap_base&& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value ) :
-#ifndef BOOST_MSVC
         Cmp( std::move( static_cast< Cmp& >( rhs ) ) ),
-#else
-        cmp_( std::move( rhs.cmp_ ) ),
-#endif
         size_holder_type( std::move( static_cast< size_holder_type& >( rhs ) ) ),
         counter_( rhs.counter_ )
     {
@@ -340,11 +292,7 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
     }
 
     heap_base( heap_base const& rhs ) :
-#ifndef BOOST_MSVC
         Cmp( static_cast< Cmp const& >( rhs ) ),
-#else
-        cmp_( rhs.value_comp() ),
-#endif
         size_holder_type( static_cast< size_holder_type const& >( rhs ) ),
         counter_( rhs.counter_ )
     {}
@@ -407,11 +355,7 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
 
     Cmp const& value_comp( void ) const noexcept
     {
-#ifndef BOOST_MSVC
         return *this;
-#else
-        return cmp_;
-#endif
     }
 
     struct internal_compare : Cmp
@@ -440,11 +384,7 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
     void swap( heap_base& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value
                                           && std::is_nothrow_move_assignable< Cmp >::value )
     {
-#ifndef BOOST_MSVC
         std::swap( static_cast< Cmp& >( *this ), static_cast< Cmp& >( rhs ) );
-#else
-        std::swap( cmp_, rhs.cmp_ );
-#endif
         std::swap( counter_, rhs.counter_ );
         size_holder< constant_time_size, size_t >::swap( rhs );
     }
@@ -465,11 +405,7 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
 private:
     Cmp& value_comp_ref( void ) noexcept
     {
-#ifndef BOOST_MSVC
         return *this;
-#else
-        return cmp_;
-#endif
     }
 
     stability_counter_type counter_;
