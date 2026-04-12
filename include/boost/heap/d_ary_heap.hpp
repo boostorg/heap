@@ -14,8 +14,10 @@
 #include <vector>
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/mutable_heap.hpp>
 #include <boost/heap/detail/ordered_adaptor_iterator.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
@@ -220,10 +222,13 @@ public:
         siftdown( 0 );
     }
 
-    void swap( d_ary_heap& rhs )
+    void do_swap( d_ary_heap& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value
+                                              && std::is_nothrow_move_assignable< super_t >::value
+                                              && std::is_nothrow_move_constructible< container_type >::value
+                                              && std::is_nothrow_move_assignable< container_type >::value )
     {
-        super_t::swap( rhs );
-        q_.swap( rhs.q_ );
+        super_t::do_swap( rhs );
+        detail::swap_via_move( q_, rhs.q_ );
     }
 
     iterator begin( void ) const
@@ -505,7 +510,12 @@ public:
     d_ary_heap& operator=( d_ary_heap&& rhs ) = default;
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const &)
-    d_ary_heap& operator=( d_ary_heap const& rhs ) = default;
+    d_ary_heap& operator=( d_ary_heap const& rhs )
+    {
+        d_ary_heap tmp( rhs );
+        do_swap( tmp );
+        return *this;
+    }
 
     /// \copydoc boost::heap::priority_queue::empty
     bool empty( void ) const
@@ -721,9 +731,10 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::swap
+    BOOST_DEPRECATED( "Use std::swap instead" )
     void swap( d_ary_heap& rhs )
     {
-        super_t::swap( rhs );
+        do_swap( rhs );
     }
 
     /// \copydoc boost::heap::priority_queue::begin
@@ -772,6 +783,13 @@ public:
     value_compare const& value_comp( void ) const
     {
         return super_t::value_comp();
+    }
+
+private:
+    void do_swap( d_ary_heap& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value
+                                              && std::is_nothrow_move_assignable< super_t >::value )
+    {
+        super_t::do_swap( rhs );
     }
 };
 

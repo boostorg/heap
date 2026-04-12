@@ -14,9 +14,11 @@
 #include <utility>
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/heap_node.hpp>
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
 #include <boost/type_traits/integral_constant.hpp>
@@ -223,16 +225,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const &)
     binomial_heap& operator=( binomial_heap const& rhs )
     {
-        if ( this == &rhs )
-            return *this;
-        clear();
-        size_holder::set_size( rhs.get_size() );
-        static_cast< super_t& >( *this ) = rhs;
-
-        if ( rhs.empty() )
-            top_element = nullptr;
-        else
-            clone_forest( rhs );
+        binomial_heap tmp( rhs );
+        do_swap( tmp );
         return *this;
     }
 
@@ -246,7 +240,7 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue &&)
-    binomial_heap& operator=( binomial_heap&& rhs )
+    binomial_heap& operator=( binomial_heap&& rhs ) noexcept( std::is_nothrow_move_assignable< super_t >::value )
     {
         clear();
         super_t::operator=( std::move( rhs ) );
@@ -308,11 +302,11 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::swap
-    void swap( binomial_heap& rhs )
+    BOOST_DEPRECATED( "Use std::swap instead" )
+    void swap( binomial_heap& rhs ) noexcept( std::is_nothrow_move_constructible< binomial_heap >::value
+                                              && std::is_nothrow_move_assignable< binomial_heap >::value )
     {
-        super_t::swap( rhs );
-        std::swap( top_element, rhs.top_element );
-        trees.swap( rhs.trees );
+        do_swap( rhs );
     }
 
     /// \copydoc boost::heap::priority_queue::top
@@ -389,7 +383,7 @@ public:
             if ( trees.empty() ) {
                 stability_counter_type stability_count = super_t::get_stability_count();
                 size_t                 size            = constant_time_size ? size_holder::get_size() : 0;
-                swap( children );
+                do_swap( children );
                 super_t::set_stability_count( stability_count );
 
                 if ( constant_time_size )
@@ -520,7 +514,7 @@ public:
             return;
 
         if ( empty() ) {
-            swap( rhs );
+            do_swap( rhs );
             return;
         }
 
@@ -630,6 +624,12 @@ public:
 
 private:
 #if !defined( BOOST_DOXYGEN_INVOKED )
+    void do_swap( binomial_heap& rhs ) noexcept( std::is_nothrow_move_constructible< binomial_heap >::value
+                                                 && std::is_nothrow_move_assignable< binomial_heap >::value )
+    {
+        detail::swap_via_move( *this, rhs );
+    }
+
     void merge_and_clear_nodes( binomial_heap& rhs )
     {
         BOOST_HEAP_ASSERT( !empty() );

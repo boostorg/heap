@@ -19,6 +19,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/heap_merge.hpp>
 #include <boost/heap/policies.hpp>
 
@@ -79,9 +80,9 @@ struct size_holder
         size_ -= value;
     }
 
-    void swap( size_holder& rhs ) noexcept
+    void do_swap( size_holder& rhs ) noexcept
     {
-        std::swap( size_, rhs.size_ );
+        swap_via_move( *this, rhs );
     }
 
     SizeType size_ {};
@@ -113,7 +114,7 @@ struct size_holder< false, SizeType >
     void sub( SizeType /*value*/ ) noexcept
     {}
 
-    void swap( size_holder& /*rhs*/ ) noexcept
+    void do_swap( size_holder& /*rhs*/ ) noexcept
     {}
 };
 
@@ -197,11 +198,12 @@ struct heap_base : Cmp, size_holder< constant_time_size, size_t >
         return value_comp();
     }
 
-    void swap( heap_base& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value
-                                          && std::is_nothrow_move_assignable< Cmp >::value )
+    void do_swap( heap_base& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value
+                                             && std::is_nothrow_move_assignable< Cmp >::value )
     {
-        std::swap( value_comp_ref(), rhs.value_comp_ref() );
-        size_holder< constant_time_size, size_t >::swap( rhs );
+        heap_base tmp( std::move( rhs ) );
+        rhs   = std::move( *this );
+        *this = std::move( tmp );
     }
 
     stability_counter_type get_stability_count( void ) const noexcept
@@ -340,12 +342,12 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
         return internal_compare( value_comp() );
     }
 
-    void swap( heap_base& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value
-                                          && std::is_nothrow_move_assignable< Cmp >::value )
+    void do_swap( heap_base& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value
+                                             && std::is_nothrow_move_assignable< Cmp >::value )
     {
-        std::swap( static_cast< Cmp& >( *this ), static_cast< Cmp& >( rhs ) );
-        std::swap( counter_, rhs.counter_ );
-        size_holder< constant_time_size, size_t >::swap( rhs );
+        heap_base tmp( std::move( rhs ) );
+        rhs   = std::move( *this );
+        *this = std::move( tmp );
     }
 
     stability_counter_type get_stability_count( void ) const

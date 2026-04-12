@@ -15,9 +15,11 @@
 #include <utility>
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/heap_node.hpp>
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
 #include <boost/type_traits/integral_constant.hpp>
@@ -246,7 +248,7 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue &&)
-    fibonacci_heap& operator=( fibonacci_heap&& rhs )
+    fibonacci_heap& operator=( fibonacci_heap&& rhs ) noexcept( std::is_nothrow_move_assignable< super_t >::value )
     {
         clear();
 
@@ -260,16 +262,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const &)
     fibonacci_heap& operator=( fibonacci_heap const& rhs )
     {
-        if ( this == &rhs )
-            return *this;
-        clear();
-        size_holder::set_size( rhs.size() );
-        static_cast< super_t& >( *this ) = rhs;
-
-        if ( rhs.empty() )
-            top_element = nullptr;
-        else
-            clone_forest( rhs );
+        fibonacci_heap tmp( rhs );
+        do_swap( tmp );
         return *this;
     }
 
@@ -323,11 +317,11 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::swap
-    void swap( fibonacci_heap& rhs )
+    BOOST_DEPRECATED( "Use std::swap instead" )
+    void swap( fibonacci_heap& rhs ) noexcept( std::is_nothrow_move_constructible< fibonacci_heap >::value
+                                               && std::is_nothrow_move_assignable< fibonacci_heap >::value )
     {
-        super_t::swap( rhs );
-        std::swap( top_element, rhs.top_element );
-        roots.swap( rhs.roots );
+        do_swap( rhs );
     }
 
 
@@ -654,6 +648,12 @@ public:
 
 private:
 #if !defined( BOOST_DOXYGEN_INVOKED )
+    void do_swap( fibonacci_heap& rhs ) noexcept( std::is_nothrow_move_constructible< fibonacci_heap >::value
+                                                  && std::is_nothrow_move_assignable< fibonacci_heap >::value )
+    {
+        detail::swap_via_move( *this, rhs );
+    }
+
     void clone_forest( fibonacci_heap const& rhs )
     {
         BOOST_HEAP_ASSERT( roots.empty() );
