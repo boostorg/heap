@@ -77,23 +77,13 @@ private:
 public:
     struct handle_type
     {
+        handle_type() noexcept = default;
+
         value_type& operator*() const
         {
             return iterator->first;
         }
 
-        handle_type( void )
-        {}
-
-        handle_type( handle_type const& rhs ) :
-            iterator( rhs.iterator )
-        {}
-
-        handle_type& operator=( handle_type const& rhs )
-        {
-            iterator = rhs.iterator;
-            return *this;
-        }
 
         bool operator==( handle_type const& rhs ) const
         {

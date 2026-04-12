@@ -132,10 +132,7 @@ public:
      * \b Complexity: Linear.
      *
      * */
-    priority_queue( priority_queue const& rhs ) :
-        super_t( rhs ),
-        q_( rhs.q_ )
-    {}
+    priority_queue( priority_queue const& rhs ) = default;
 
     /**
      * \b Effects: C++11-style move constructor.
@@ -143,10 +140,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    priority_queue( priority_queue&& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value ) :
-        super_t( std::move( rhs ) ),
-        q_( std::move( rhs.q_ ) )
-    {}
+    priority_queue( priority_queue&& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value ) = default;
 
     /**
      * \b Effects: C++11-style move assignment.
@@ -155,11 +149,7 @@ public:
      *
      * */
     priority_queue& operator=( priority_queue&& rhs ) noexcept( std::is_nothrow_move_assignable< super_t >::value )
-    {
-        super_t::operator=( std::move( rhs ) );
-        q_ = std::move( rhs.q_ );
-        return *this;
-    }
+        = default;
 
     /**
      * \b Effects: Assigns priority queue from rhs.
@@ -167,12 +157,7 @@ public:
      * \b Complexity: Linear.
      *
      * */
-    priority_queue& operator=( priority_queue const& rhs )
-    {
-        static_cast< super_t& >( *this ) = static_cast< super_t const& >( rhs );
-        q_                               = rhs.q_;
-        return *this;
-    }
+    priority_queue& operator=( priority_queue const& rhs ) = default;
 
     /**
      * \b Effects: Returns true, if the priority queue contains no elements.
