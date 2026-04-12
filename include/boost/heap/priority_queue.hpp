@@ -14,8 +14,10 @@
 #include <vector>
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -157,7 +159,12 @@ public:
      * \b Complexity: Linear.
      *
      * */
-    priority_queue& operator=( priority_queue const& rhs ) = default;
+    priority_queue& operator=( priority_queue const& rhs )
+    {
+        priority_queue tmp( rhs );
+        do_swap( tmp );
+        return *this;
+    }
 
     /**
      * \b Effects: Returns true, if the priority queue contains no elements.
@@ -269,12 +276,13 @@ public:
      *
      * \b Complexity: Constant.
      *
+     * \deprecated Use \c std::swap instead.
      * */
+    BOOST_DEPRECATED( "Use std::swap instead" )
     void swap( priority_queue& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value
                                                && std::is_nothrow_move_assignable< super_t >::value )
     {
-        super_t::swap( rhs );
-        q_.swap( rhs.q_ );
+        do_swap( rhs );
     }
 
     /**
@@ -391,6 +399,14 @@ public:
     bool operator!=( HeapType const& rhs ) const
     {
         return !( *this == rhs );
+    }
+
+private:
+    void do_swap( priority_queue& rhs ) noexcept( std::is_nothrow_move_constructible< super_t >::value
+                                                  && std::is_nothrow_move_assignable< super_t >::value )
+    {
+        super_t::do_swap( rhs );
+        detail::swap_via_move( q_, rhs.q_ );
     }
 };
 

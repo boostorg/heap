@@ -15,9 +15,11 @@
 #include <utility>
 
 #include <boost/assert.hpp>
+#include <boost/config.hpp>
 
 #include <boost/heap/detail/heap_comparison.hpp>
 #include <boost/heap/detail/heap_node.hpp>
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/stable_heap.hpp>
 #include <boost/heap/detail/tree_iterator.hpp>
 
@@ -377,13 +379,8 @@ public:
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const & rhs)
     skew_heap& operator=( skew_heap const& rhs )
     {
-        if ( this == &rhs )
-            return *this;
-        clear();
-        size_holder::set_size( rhs.get_size() );
-        static_cast< super_t& >( *this ) = rhs;
-
-        clone_tree( rhs );
+        skew_heap tmp( rhs );
+        do_swap( tmp );
         return *this;
     }
 
@@ -396,8 +393,9 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue &&)
-    skew_heap& operator=( skew_heap&& rhs )
+    skew_heap& operator=( skew_heap&& rhs ) noexcept( std::is_nothrow_move_assignable< super_t >::value )
     {
+        clear();
         super_t::operator=( std::move( rhs ) );
         root     = rhs.root;
         rhs.root = nullptr;
@@ -480,10 +478,11 @@ public:
     }
 
     /// \copydoc boost::heap::priority_queue::swap
-    void swap( skew_heap& rhs )
+    BOOST_DEPRECATED( "Use std::swap instead" )
+    void swap( skew_heap& rhs ) noexcept( std::is_nothrow_move_constructible< skew_heap >::value
+                                          && std::is_nothrow_move_assignable< skew_heap >::value )
     {
-        super_t::swap( rhs );
-        std::swap( root, rhs.root );
+        do_swap( rhs );
     }
 
     /// \copydoc boost::heap::priority_queue::top
@@ -753,6 +752,12 @@ public:
 
 private:
 #if !defined( BOOST_DOXYGEN_INVOKED )
+    void do_swap( skew_heap& rhs ) noexcept( std::is_nothrow_move_constructible< skew_heap >::value
+                                             && std::is_nothrow_move_assignable< skew_heap >::value )
+    {
+        detail::swap_via_move( *this, rhs );
+    }
+
     struct push_void
     {
         static void push( skew_heap* self, const_reference v )

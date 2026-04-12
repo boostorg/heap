@@ -16,6 +16,7 @@
 #include <list>
 #include <utility>
 
+#include <boost/heap/detail/heap_utils.hpp>
 #include <boost/heap/detail/ordered_adaptor_iterator.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 
@@ -145,11 +146,8 @@ protected:
 
     priority_queue_mutable_wrapper& operator=( priority_queue_mutable_wrapper const& rhs )
     {
-        q_      = rhs.q_;
-        objects = rhs.objects;
-        q_.clear();
-        for ( typename object_list::iterator it = objects.begin(); it != objects.end(); ++it )
-            q_.push( it );
+        priority_queue_mutable_wrapper tmp( rhs );
+        do_swap( tmp );
         return *this;
     }
 
@@ -355,10 +353,10 @@ public:
         return q_.get_allocator();
     }
 
-    void swap( priority_queue_mutable_wrapper& rhs )
+    void do_swap( priority_queue_mutable_wrapper& rhs )
     {
-        objects.swap( rhs.objects );
-        q_.swap( rhs.q_ );
+        swap_via_move( objects, rhs.objects );
+        q_.do_swap( rhs.q_ );
     }
 
     const_reference top( void ) const
