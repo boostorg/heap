@@ -54,7 +54,13 @@ typedef parameter::parameters< boost::parameter::required< tag::arity >,
 
 /* base class for d-ary heap */
 template < typename T, class BoundArgs, class IndexUpdater >
-class d_ary_heap : private make_heap_base< T, BoundArgs, false >::type
+class d_ary_heap :
+#ifndef BOOST_MSVC
+    private
+#else
+    public
+#endif
+    make_heap_base< T, BoundArgs, false >::type
 {
     typedef make_heap_base< T, BoundArgs, false > heap_base_maker;
 
