@@ -30,9 +30,7 @@ struct size_holder
     static const bool constant_time_size = ConstantSize;
     typedef SizeType  size_type;
 
-    size_holder( void ) noexcept :
-        size_( 0 )
-    {}
+    size_holder( void ) noexcept = default;
 
     size_holder( size_holder&& rhs ) noexcept :
         size_( rhs.size_ )
@@ -40,9 +38,7 @@ struct size_holder
         rhs.size_ = 0;
     }
 
-    size_holder( size_holder const& rhs ) noexcept :
-        size_( rhs.size_ )
-    {}
+    size_holder( size_holder const& rhs ) noexcept = default;
 
     size_holder& operator=( size_holder&& rhs ) noexcept
     {
@@ -51,11 +47,7 @@ struct size_holder
         return *this;
     }
 
-    size_holder& operator=( size_holder const& rhs ) noexcept
-    {
-        size_ = rhs.size_;
-        return *this;
-    }
+    size_holder& operator=( size_holder const& rhs ) noexcept = default;
 
     SizeType get_size() const noexcept
     {
@@ -92,7 +84,7 @@ struct size_holder
         std::swap( size_, rhs.size_ );
     }
 
-    SizeType size_;
+    SizeType size_ {};
 };
 
 template < class SizeType >
@@ -100,25 +92,6 @@ struct size_holder< false, SizeType >
 {
     static const bool constant_time_size = false;
     typedef SizeType  size_type;
-
-    size_holder( void ) noexcept
-    {}
-
-    size_holder( size_holder&& ) noexcept
-    {}
-
-    size_holder( size_holder const& ) noexcept
-    {}
-
-    size_holder& operator=( size_holder&& ) noexcept
-    {
-        return *this;
-    }
-
-    size_holder& operator=( size_holder const& ) noexcept
-    {
-        return *this;
-    }
 
     size_type get_size() const noexcept
     {
@@ -283,19 +256,13 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
         counter_( 0 )
     {}
 
-    heap_base( heap_base&& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value ) :
-        Cmp( std::move( static_cast< Cmp& >( rhs ) ) ),
-        size_holder_type( std::move( static_cast< size_holder_type& >( rhs ) ) ),
-        counter_( rhs.counter_ )
-    {
-        rhs.counter_ = 0;
-    }
+    heap_base( heap_base const& rhs )            = default;
+    heap_base& operator=( heap_base const& rhs ) = default;
 
-    heap_base( heap_base const& rhs ) :
-        Cmp( static_cast< Cmp const& >( rhs ) ),
-        size_holder_type( static_cast< size_holder_type const& >( rhs ) ),
-        counter_( rhs.counter_ )
-    {}
+    heap_base( heap_base&& rhs ) noexcept( std::is_nothrow_move_constructible< Cmp >::value )
+    {
+        *this = std::move( rhs );
+    }
 
     heap_base& operator=( heap_base&& rhs ) noexcept( std::is_nothrow_move_assignable< Cmp >::value )
     {
@@ -307,14 +274,6 @@ struct heap_base< T, Cmp, constant_time_size, StabilityCounterType, true > :
         return *this;
     }
 
-    heap_base& operator=( heap_base const& rhs )
-    {
-        value_comp_ref().operator=( rhs.value_comp() );
-        size_holder_type::operator=( static_cast< size_holder_type const& >( rhs ) );
-
-        counter_ = rhs.counter_;
-        return *this;
-    }
 
     bool operator()( internal_type const& lhs, internal_type const& rhs ) const
     {

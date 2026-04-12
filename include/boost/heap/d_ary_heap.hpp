@@ -156,29 +156,10 @@ public:
         super_t( cmp )
     {}
 
-    d_ary_heap( d_ary_heap const& rhs ) :
-        super_t( rhs ),
-        q_( rhs.q_ )
-    {}
-
-    d_ary_heap( d_ary_heap&& rhs ) :
-        super_t( std::move( rhs ) ),
-        q_( std::move( rhs.q_ ) )
-    {}
-
-    d_ary_heap& operator=( d_ary_heap&& rhs )
-    {
-        super_t::operator=( std::move( rhs ) );
-        q_ = std::move( rhs.q_ );
-        return *this;
-    }
-
-    d_ary_heap& operator=( d_ary_heap const& rhs )
-    {
-        static_cast< super_t& >( *this ) = static_cast< super_t const& >( rhs );
-        q_                               = rhs.q_;
-        return *this;
-    }
+    d_ary_heap( d_ary_heap const& rhs )            = default;
+    d_ary_heap( d_ary_heap&& rhs )                 = default;
+    d_ary_heap& operator=( d_ary_heap&& rhs )      = default;
+    d_ary_heap& operator=( d_ary_heap const& rhs ) = default;
 
     bool empty( void ) const
     {
@@ -515,28 +496,16 @@ public:
     {}
 
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue const &)
-    d_ary_heap( d_ary_heap const& rhs ) :
-        super_t( rhs )
-    {}
+    d_ary_heap( d_ary_heap const& rhs ) = default;
 
     /// \copydoc boost::heap::priority_queue::priority_queue(priority_queue &&)
-    d_ary_heap( d_ary_heap&& rhs ) :
-        super_t( std::move( rhs ) )
-    {}
+    d_ary_heap( d_ary_heap&& rhs ) = default;
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue &&)
-    d_ary_heap& operator=( d_ary_heap&& rhs )
-    {
-        super_t::operator=( std::move( rhs ) );
-        return *this;
-    }
+    d_ary_heap& operator=( d_ary_heap&& rhs ) = default;
 
     /// \copydoc boost::heap::priority_queue::operator=(priority_queue const &)
-    d_ary_heap& operator=( d_ary_heap const& rhs )
-    {
-        super_t::operator=( rhs );
-        return *this;
-    }
+    d_ary_heap& operator=( d_ary_heap const& rhs ) = default;
 
     /// \copydoc boost::heap::priority_queue::empty
     bool empty( void ) const

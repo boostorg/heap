@@ -90,7 +90,7 @@ struct ordered_tree_iterator_storage : ValueExtractor
 {
     struct compare_values_by_handle : ValueCompare
     {
-        compare_values_by_handle( ValueCompare const& cmp ) :
+        explicit compare_values_by_handle( ValueCompare const& cmp ) :
             ValueCompare( cmp )
         {}
 

@@ -66,29 +66,10 @@ struct make_binomial_heap_base
             allocator_type( alloc )
         {}
 
-        type( type const& rhs ) :
-            base_type( rhs ),
-            allocator_type( rhs )
-        {}
-
-        type( type&& rhs ) :
-            base_type( std::move( static_cast< base_type& >( rhs ) ) ),
-            allocator_type( std::move( static_cast< allocator_type& >( rhs ) ) )
-        {}
-
-        type& operator=( type&& rhs )
-        {
-            base_type::operator=( std::move( static_cast< base_type& >( rhs ) ) );
-            allocator_type::operator=( std::move( static_cast< allocator_type& >( rhs ) ) );
-            return *this;
-        }
-
-        type& operator=( type const& rhs )
-        {
-            base_type::operator=( static_cast< base_type const& >( rhs ) );
-            allocator_type::operator=( static_cast< allocator_type const& >( rhs ) );
-            return *this;
-        }
+        type( type const& rhs )            = default;
+        type( type&& rhs )                 = default;
+        type& operator=( type&& rhs )      = default;
+        type& operator=( type const& rhs ) = default;
     };
 };
 
