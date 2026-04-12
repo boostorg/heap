@@ -7,6 +7,7 @@
 =============================================================================*/
 
 #define BOOST_TEST_MAIN
+#include <boost/mpl/list.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <boost/heap/binomial_heap.hpp>
@@ -128,6 +129,30 @@ void test_move_only_move_semantics( void )
     BOOST_REQUIRE_EQUAL( pq2.top().value, 30 );
 }
 
+typedef boost::mpl::list< boost::heap::binomial_heap< MoveOnlyInt >,
+                          boost::heap::binomial_heap< MoveOnlyInt, boost::heap::stable< true > >,
+                          boost::heap::fibonacci_heap< MoveOnlyInt >,
+                          boost::heap::fibonacci_heap< MoveOnlyInt, boost::heap::stable< true > >,
+                          boost::heap::pairing_heap< MoveOnlyInt >,
+                          boost::heap::pairing_heap< MoveOnlyInt, boost::heap::stable< true > >,
+                          boost::heap::skew_heap< MoveOnlyInt >,
+                          boost::heap::skew_heap< MoveOnlyInt, boost::heap::stable< true > >,
+                          boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 > >,
+                          boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 >, boost::heap::stable< true > > >
+    default_heaps;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE( move_only_basic, Heap, default_heaps )
+{
+    test_move_only_basic< Heap >();
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE( move_only_emplace_temporary, Heap, default_heaps )
+{
+    test_move_only_emplace_temporary< Heap >();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 struct CustomCompare
 {
     bool operator()( MoveOnlyInt const& lhs, MoveOnlyInt const& rhs ) const
@@ -150,103 +175,21 @@ void test_move_only_custom_compare( void )
     BOOST_REQUIRE_EQUAL( pq.top().value, 5 );
 }
 
-BOOST_AUTO_TEST_CASE( move_only_binomial_heap_basic )
+// Heaps with custom comparator
+typedef boost::mpl::list<
+    boost::heap::binomial_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > >,
+    boost::heap::fibonacci_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > >,
+    boost::heap::pairing_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > >,
+    boost::heap::skew_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > >,
+    boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 >, boost::heap::compare< CustomCompare > > >
+    custom_heaps;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE( move_only_move_semantics, Heap, default_heaps )
 {
-    test_move_only_basic< boost::heap::binomial_heap< MoveOnlyInt > >();
+    test_move_only_move_semantics< Heap >();
 }
 
-BOOST_AUTO_TEST_CASE( move_only_binomial_heap_emplace_temporary )
+BOOST_AUTO_TEST_CASE_TEMPLATE( move_only_custom_compare, Heap, custom_heaps )
 {
-    test_move_only_emplace_temporary< boost::heap::binomial_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_binomial_heap_move_semantics )
-{
-    test_move_only_move_semantics< boost::heap::binomial_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_binomial_heap_custom_compare )
-{
-    test_move_only_custom_compare< boost::heap::binomial_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_fibonacci_heap_basic )
-{
-    test_move_only_basic< boost::heap::fibonacci_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_fibonacci_heap_emplace_temporary )
-{
-    test_move_only_emplace_temporary< boost::heap::fibonacci_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_fibonacci_heap_move_semantics )
-{
-    test_move_only_move_semantics< boost::heap::fibonacci_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_fibonacci_heap_custom_compare )
-{
-    test_move_only_custom_compare< boost::heap::fibonacci_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_pairing_heap_basic )
-{
-    test_move_only_basic< boost::heap::pairing_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_pairing_heap_emplace_temporary )
-{
-    test_move_only_emplace_temporary< boost::heap::pairing_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_pairing_heap_move_semantics )
-{
-    test_move_only_move_semantics< boost::heap::pairing_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_pairing_heap_custom_compare )
-{
-    test_move_only_custom_compare< boost::heap::pairing_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_skew_heap_basic )
-{
-    test_move_only_basic< boost::heap::skew_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_skew_heap_emplace_temporary )
-{
-    test_move_only_emplace_temporary< boost::heap::skew_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_skew_heap_move_semantics )
-{
-    test_move_only_move_semantics< boost::heap::skew_heap< MoveOnlyInt > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_skew_heap_custom_compare )
-{
-    test_move_only_custom_compare< boost::heap::skew_heap< MoveOnlyInt, boost::heap::compare< CustomCompare > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_d_ary_heap_basic )
-{
-    test_move_only_basic< boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_d_ary_heap_emplace_temporary )
-{
-    test_move_only_emplace_temporary< boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_d_ary_heap_move_semantics )
-{
-    test_move_only_move_semantics< boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 > > >();
-}
-
-BOOST_AUTO_TEST_CASE( move_only_d_ary_heap_custom_compare )
-{
-    test_move_only_custom_compare<
-        boost::heap::d_ary_heap< MoveOnlyInt, boost::heap::arity< 4 >, boost::heap::compare< CustomCompare > > >();
+    test_move_only_custom_compare< Heap >();
 }
